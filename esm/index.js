@@ -103,12 +103,10 @@ function createFor(uhtml) {
     (entry, id) => {
       const store = cache.get(entry) || cache.set(entry, create(null));
       const info = store[id] || (store[id] = createCache());
-      return (
-        (template, ...values) => {
-          unrollValues(info, values);
-          return uhtml.for(entry, id)(template, ...values);
-        }
-      );
+      return (template, ...values) => {
+        unrollValues(info, values);
+        return uhtml.for(entry, id)(template, ...values);
+      };
     }
   );
 }
