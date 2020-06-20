@@ -1,0 +1,50 @@
+{
+  "name": "uland",
+  "version": "0.0.0",
+  "main": "./cjs/index.js",
+  "scripts": {
+    "build": "npm run cjs && npm run rollup:es && npm run rollup:babel && npm run min && npm run test && npm run size",
+    "cjs": "ascjs esm cjs",
+    "rollup:es": "rollup --config rollup/es.config.js && sed -i.bck 's/^var /self./' es.js && rm -rf es.js.bck",
+    "rollup:babel": "rollup --config rollup/babel.config.js && sed -i.bck 's/^var /self./' index.js && rm -rf index.js.bck && drop-babel-typeof index.js",
+    "min": "terser index.js --comments='/^!/' -c -m -o min.js",
+    "size": "cat index.js | wc -c;cat min.js | wc -c;gzip -c9 min.js | wc -c;brotli -c9 min.js | wc -c;cat es.js | wc -c;gzip -c9 es.js | wc -c;brotli -c9 es.js | wc -c"
+  },
+  "keywords": [],
+  "author": "Andrea Giammarchi",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/core": "^7.10.3",
+    "@babel/preset-env": "^7.10.3",
+    "@ungap/degap": "^0.2.0",
+    "ascjs": "^4.0.1",
+    "drop-babel-typeof": "^1.0.3",
+    "rollup": "^2.17.1",
+    "rollup-plugin-babel": "^4.4.0",
+    "rollup-plugin-includepaths": "^0.2.3",
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "rollup-plugin-terser": "^6.1.0",
+    "terser": "^4.8.0"
+  },
+  "module": "./esm/index.js",
+  "type": "module",
+  "exports": {
+    "import": "./esm/index.js",
+    "default": "./cjs/index.js"
+  },
+  "unpkg": "min.js",
+  "dependencies": {
+    "dom-augmentor": "^2.0.8",
+    "uhtml": "^2.0.1",
+    "umap": "^1.0.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/WebReflection/uland.git"
+  },
+  "bugs": {
+    "url": "https://github.com/WebReflection/uland/issues"
+  },
+  "homepage": "https://github.com/WebReflection/uland#readme",
+  "description": "A uhtml based neverland fork"
+}

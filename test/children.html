@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>children</title>
+  <script type="module">
+    import(
+      /^(?:localhost|[::1]|127(?:.d+){3})$/.test(location.hostname) ?
+      '../esm/index.js' :
+      'https://unpkg.com/uland?module'
+    )
+    .then(({Component: $, render, html, useEffect, useState}) => {
+      const Child = $((name, i) => html`
+        <div>${name} ${i}</div>`
+      );
+
+      const Parent = $((children) => html`
+        <div>${children}</div>
+      `);
+
+      const App = $(() => {
+        const [i, update] = useState(0);
+        setTimeout(update, 1000, i + 1);
+        return html`
+        <div>
+          ${Parent([
+            Child("apple", i),
+            Child("banana", i),
+            Child("cherry", i)
+          ].concat(Math.random() < .5 ? Child("temp", i) : []))}
+        </div>
+        `;
+      });
+
+      render(document.body, App);
+    });
+    </script>
+</head>
+<body></body>
+</html>

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>DOM Augmentor</title>
+  <script type="module">
+  import(
+    /^(?:localhost|[::1]|127(?:.d+){3})$/.test(location.hostname) ?
+    '../esm/index.js' :
+    'https://unpkg.com/uland?module'
+  )
+  .then(({Component: $, render, html, useEffect, useState}) => {
+    const text = 'hello';
+
+    const Button = $((text) => {
+      useEffect(
+        () => {
+          console.log('connected');
+          return () => {
+            console.log('disconnected');
+          };
+        },
+        []
+      );
+      const [i, increment] = useState(0);
+      return html`
+      <button onclick=${() => increment(i + 1)}>
+        ${text} ${i}
+      </button>`;
+    });
+
+    render(document.body, Button(text));
+  });
+  </script>
+</head>
+<body>
+  <div id="direct"></div>
+  <div id="indirect"></div>
+</body>
+</html>
