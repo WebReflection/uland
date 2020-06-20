@@ -7,7 +7,7 @@ Same API, except the exports are `{Component, render, html, svg}`, where `Compon
 
 ## API
 
-The concept is exactly the same as the _neverland_ one, so please to there to know more about this module usage.
+The concept is exactly the same as the _neverland_ one, so please go there to know more about this module usage.
 
 
 ## Differences
@@ -25,4 +25,4 @@ import {Component, render, html, useState} from 'uland';
 The component is a function you can invoke ether via `new Component` or just `Component`, as it doesn't matter how you invoke it, it'll return a usable component.
 
 
-**Practically** speaking, this module size is *~5K* all inclusive, as opposite of ~7.5K~.
+**Practically** speaking, this module size is *~5K* all inclusive, as opposite of *~7.5K*.
