@@ -1,10 +1,10 @@
-# <em>µ</em>land
+# 🦄 <em>µ</em>land
 
 ![tiny island](./uland-head.jpg)
 
 <sup>**Social Media Photo by [Ben Klea](https://unsplash.com/@benkleaphoto) on [Unsplash](https://unsplash.com/)**</sup>
 
-*micro* land, is a [µhtml](https://github.com/WebReflection/uhtml#readme) take at [neverland](https://github.com/WebReflection/neverland/#readme).
+*micro* land, or *unicorn* land, is a [µhtml](https://github.com/WebReflection/uhtml#readme) take at [neverland](https://github.com/WebReflection/neverland/#readme).
 
 Same API, except the exports are `{Component, render, html, svg}`, where `Component` is a function you can use either as `new Component(...)` or just `Component(...)` which is the equivalent of _neverland_ default export.
 
