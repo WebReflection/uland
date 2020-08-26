@@ -35,7 +35,7 @@
   "unpkg": "min.js",
   "dependencies": {
     "dom-augmentor": "^2.0.8",
-    "uhtml": "^2.1.0",
+    "uhtml": "^2.1.1",
     "umap": "^1.0.2"
   },
   "repository": {
