@@ -1366,8 +1366,18 @@ self.uland = (function (exports) {
 
   var render$1 = function render$1(where, what) {
     var hook = typeof what === 'function' ? what() : what;
-    var info = cache$2.get(where) || cache$2.set(where, createCache$1());
+    var info = cache$2.get(where) || cache$2.set(where, createCache$1(null));
+    info.w = where;
+    info.W = what;
     return render(where, hook instanceof Hook ? unroll$1(info, hook) : (unrollHole(info, hook), hook));
+  };
+  var update$1 = false;
+
+  var updateEntry = function updateEntry(entry, node) {
+    if (node !== entry.node) {
+      if (entry.node) update$1 = true;
+      entry.node = node;
+    }
   };
 
   var createHook = function createHook(info, entry) {
@@ -1376,15 +1386,29 @@ self.uland = (function (exports) {
 
       if (hole instanceof Hole) {
         unrollHole(info, hole);
-        return view(entry, hole);
-      }
+        updateEntry(entry, view(entry, hole));
+      } else updateEntry(entry, hole);
 
-      return hole;
+      try {
+        return entry.node;
+      } finally {
+        if (update$1) {
+          update$1 = false;
+          var p = info;
+
+          while (p.p) {
+            p = p.p;
+          }
+
+          render$1(p.w, p.W);
+        }
+      }
     });
   };
 
-  var createCache$1 = function createCache() {
+  var createCache$1 = function createCache(p) {
     return {
+      p: p,
       stack: [],
       entry: null
     };
@@ -1401,9 +1425,10 @@ self.uland = (function (exports) {
     if (!entry || entry.fn !== fn) {
       info.entry = entry = {
         fn: fn,
-        hook: null
+        hook: null,
+        node: null
       };
-      entry.hook = createHook(createCache$1(), entry);
+      entry.hook = createHook(createCache$1(info), entry);
     }
 
     return (_entry = entry).hook.apply(_entry, [template].concat(_toConsumableArray(values)));
@@ -1414,21 +1439,21 @@ self.uland = (function (exports) {
     unrollValues$1(info, values, values.length);
   };
 
-  var unrollValues$1 = function unrollValues(_ref3, values, length) {
-    var stack = _ref3.stack;
+  var unrollValues$1 = function unrollValues(info, values, length) {
+    var stack = info.stack;
 
     for (var i = 0; i < length; i++) {
       var hook = values[i];
-      if (hook instanceof Hook) values[i] = unroll$1(stack[i] || (stack[i] = createCache$1()), hook);else if (hook instanceof Hole) unrollHole(stack[i] || (stack[i] = createCache$1()), hook);else if (isArray$1(hook)) unrollValues(stack[i] || (stack[i] = createCache$1()), hook, hook.length);else stack[i] = null;
+      if (hook instanceof Hook) values[i] = unroll$1(stack[i] || (stack[i] = createCache$1(info)), hook);else if (hook instanceof Hole) unrollHole(stack[i] || (stack[i] = createCache$1(info)), hook);else if (isArray$1(hook)) unrollValues(stack[i] || (stack[i] = createCache$1(info)), hook, hook.length);else stack[i] = null;
     }
 
     if (length < stack.length) stack.splice(length);
   };
 
-  var view = function view(entry, _ref4) {
-    var type = _ref4.type,
-        template = _ref4.template,
-        values = _ref4.values;
+  var view = function view(entry, _ref3) {
+    var type = _ref3.type,
+        template = _ref3.template,
+        values = _ref3.values;
     return (type === 'svg' ? svg : html)["for"](entry, type).apply(void 0, [template].concat(_toConsumableArray(values)));
   };
 
@@ -1452,7 +1477,7 @@ self.uland = (function (exports) {
     var cache = umap(new WeakMap());
     return function (entry, id) {
       var store = cache.get(entry) || cache.set(entry, create$1(null));
-      var info = store[id] || (store[id] = createCache$1());
+      var info = store[id] || (store[id] = createCache$1(null));
       return function (template) {
         for (var _len4 = arguments.length, values = new Array(_len4 > 1 ? _len4 - 1 : 0), _key4 = 1; _key4 < _len4; _key4++) {
           values[_key4 - 1] = arguments[_key4];
@@ -1478,6 +1503,8 @@ self.uland = (function (exports) {
   exports.useReducer = useReducer;
   exports.useRef = useRef;
   exports.useState = useState;
+
+  Object.defineProperty(exports, '__esModule', { value: true });
 
   return exports;
 
