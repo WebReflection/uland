@@ -40,6 +40,19 @@ Please [check neverland](https://github.com/WebReflection/neverland/#concept) to
 
 ## Differences
 
+In version 0.3, *µland* can return conditional templates.
+
+```js
+const Rando = Component(url => {
+  const {data, error} = useSWR(url, fetcher);
+  if (error) return html`<div>failed to load</div>`;
+  if (!data) return html`<div>loading...</div>`;
+  return html`<div>${data.title}</div>`;
+});
+```
+
+Once proven to be useful and robust, this feature will be ported to *neverland* too, otherwise these are basically the same.
+
 **Technically** speaking, just the following one:
 
 ```js
