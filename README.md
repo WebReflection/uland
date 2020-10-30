@@ -36,34 +36,3 @@ render(document.body, html`
 ```
 
 Please [check neverland](https://github.com/WebReflection/neverland/#concept) to know more about this module usage.
-
-
-## Differences
-
-In version 0.3, *µland* can return conditional templates.
-
-```js
-const Rando = Component(url => {
-  const {data, error} = useSWR(url, fetcher);
-  if (error) return html`<div>failed to load</div>`;
-  if (!data) return html`<div>loading...</div>`;
-  return html`<div>${data.title}</div>`;
-});
-```
-
-Once proven to be useful and robust, this feature will be ported to *neverland* too, otherwise these are basically the same.
-
-**Technically** speaking, just the following one:
-
-```js
-// neverland
-import {neverland, render, html, useState} from 'neverland';
-
-// uland
-import {Component, render, html, useState} from 'uland';
-```
-
-The component is a function you can invoke ether via `new Component` or just `Component`, as it doesn't matter how you invoke it, it'll return a usable component.
-
-
-**Practically** speaking, this module size is *~5K* all inclusive, as opposite of *~7.5K*.
