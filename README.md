@@ -8,6 +8,10 @@
 
 Same API, except the exports are `{Component, render, html, svg}`, where `Component` is a function you can use either as `new Component(...)` or just `Component(...)` which is the equivalent of _neverland_ default export.
 
+### Announcement
+
+Are you looking for something even more similar to *React*? Then don't miss [🐪 kaboobie](https://github.com/WebReflection/kaboobie/#readme) out!
+
 
 ## API
 
