@@ -15,7 +15,7 @@ Are you looking for something even more similar to *React*? Then don't miss [ðŸ
 
 ## API
 
-The concept is exactly the same as the _neverland_ one.
+The concept is exactly the same as the _neverland_ one, the `render(...)` accepts a node to render, and either a *component* or a *callback* that returns some content.
 
 [Live demo](https://codepen.io/WebReflection/pen/dyGvNdg?editors=0010).
 
@@ -31,7 +31,7 @@ const Counter = Component((initialState) => {
 });
 
 // basic example, show two independent counters
-render(document.body, html`
+render(document.body, () => html`
   <div>
     A bounce of counters.<hr>
     ${Counter(0)} ${Counter(1)}
