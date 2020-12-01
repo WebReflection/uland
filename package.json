@@ -1,6 +1,6 @@
 {
   "name": "uland",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "main": "./cjs/index.js",
   "scripts": {
     "build": "npm run cjs && npm run rollup:es && npm run rollup:babel && npm run min && npm run test && npm run size",
