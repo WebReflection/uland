@@ -46,10 +46,18 @@ export {
 } from 'dom-augmentor';
 
 let update = false;
-const updateEntry = (entry, node) => {
-  if (node !== entry.node) {
-    if (entry.node)
+const updateEntry = (entry, node, isHole) => {
+  const curr = entry.node;
+  if (node !== curr) {
+    if (curr) {
       update = true;
+      if (isHole) {
+        // TODO: fix wired fragments too
+        const {parentNode} = curr;
+        if (parentNode)
+          parentNode.replaceChild(node, curr);
+      }
+    }
     entry.node = node;
   }
 };
@@ -58,10 +66,10 @@ const createHook = (info, entry) => augmentor(function () {
   const hole = entry.fn.apply(null, arguments);
   if (hole instanceof Hole) {
     unrollHole(info, hole);
-    updateEntry(entry, view(entry, hole));
+    updateEntry(entry, view(entry, hole), true);
   }
   else
-    updateEntry(entry, hole);
+    updateEntry(entry, hole, false);
   try { return entry.node; }
   finally {
     if (update) {

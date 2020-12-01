@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <script type="module">
+    import(
+      /^(?:localhost|[::1]|127(?:.d+){3})$/.test(location.hostname) ?
+      '../esm/index.js' :
+      'https://unpkg.com/uland?module'
+    )
+    .then(({Component, render, html, useState}) => {
+      const MyComp = Component(function MyComp () {
+        const [state, setState] = useState(false);
+
+        function flipTrue (ev) {
+          ev.preventDefault();
+
+          setState(true);
+        }
+
+        function flipFalse (ev) {
+          ev.preventDefault();
+
+          setState(false);
+        }
+
+        console.log(state);
+
+        if (state) {
+          return html`
+            <div>
+              <div>hello uland (true)</div>
+              <button onclick="${flipFalse}">change state</button>
+            </div>
+          `;
+        }
+
+        if (!state) {
+          return html`
+            <div>
+              <div>hello uland (false)</div>
+              <button onclick=${flipTrue}>change state</button>
+            </div>
+          `;
+        }
+      });
+
+      render(document.querySelector('.app'), html`
+        <div>
+          ${MyComp()}
+        </div>
+      `);
+    });
+    </script>
+</head>
+<body class="app"></body>
+</html>
