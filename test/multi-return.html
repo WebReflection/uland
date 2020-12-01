@@ -47,10 +47,8 @@
         }
       });
 
-      render(document.querySelector('.app'), html`
-        <div>
-          ${MyComp()}
-        </div>
+      render(document.querySelector('.app'), () => html`
+        ${MyComp()}
       `);
     });
     </script>
