@@ -6,6 +6,13 @@
 
 *micro* land, or *unicorn* land, is a [µhtml](https://github.com/WebReflection/uhtml#readme) take at [neverland](https://github.com/WebReflection/neverland/#readme).
 
+
+### 📣 Community Announcement
+
+Please ask questions in the [dedicated forum](https://webreflection.boards.net/) to help the community around this project grow ♥
+
+---
+
 Same API, except the exports are `{Component, render, html, svg}`, where `Component` is a function you can use either as `new Component(...)` or just `Component(...)` which is the equivalent of _neverland_ default export.
 
 ### Announcement
