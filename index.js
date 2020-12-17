@@ -37,9 +37,7 @@ self.uland = (function (exports) {
   }
 
   /*! (c) Andrea Giammarchi - ISC */
-  var self = null ||
-  /* istanbul ignore next */
-  {};
+  var self = {};
   self.CustomEvent = typeof CustomEvent === 'function' ? CustomEvent : function (__p__) {
     CustomEvent[__p__] = new CustomEvent('').constructor[__p__];
     return CustomEvent;
@@ -53,173 +51,396 @@ self.uland = (function (exports) {
   }('prototype');
   var CustomEvent$1 = self.CustomEvent;
 
-  /*! (c) Andrea Giammarchi - ISC */
-  var self$1 = null ||
-  /* istanbul ignore next */
-  {};
+  /**
+   * @typedef {Object} Handler an object that handle events.
+   * @property {(event: Event) => void} connected an optional method triggered when node is connected.
+   * @property {(event: Event) => void} disconnected an optional method triggered when node is disconnected.
+   */
 
-  try {
-    self$1.WeakSet = WeakSet;
-  } catch (WeakSet) {
-    // requires a global WeakMap (IE11+)
-    (function (WeakMap) {
-      var all = new WeakMap();
-      var proto = WeakSet.prototype;
+  /**
+   * @typedef {Object} UConnect an utility to connect or disconnect nodes to observe.
+   * @property {(node: Node, handler?: Handler) => void} connect a method to start observing a generic Node.
+   * @property {(node: Node) => void} disconnect a method to stop observing a generic Node.
+   * @property {() => void} kill a method to kill/disconnect the MutationObserver.
+   */
 
-      proto.add = function (value) {
-        return all.get(this).set(value, 1), this;
-      };
+  /**
+   * Attach a MutationObserver to a generic node and returns a UConnect instance.
+   * @param {Node} root a DOM node to observe for mutations.
+   * @param {string} parse the kind of nodes to parse: children, by default, or childNodes.
+   * @param {Event} CE an Event/CustomEvent constructor (polyfilled in SSR).
+   * @param {MutationObserver} MO a MutationObserver constructor (polyfilled in SSR).
+   * @returns {UConnect} an utility to connect or disconnect nodes to observe.
+   */
+  var observe = function observe(root, parse, CE, MO) {
+    var observed = new WeakMap(); // these two should be WeakSet but IE11 happens
 
-      proto["delete"] = function (value) {
-        return all.get(this)["delete"](value);
-      };
+    var wmin = new WeakMap();
+    var wmout = new WeakMap();
 
-      proto.has = function (value) {
-        return all.get(this).has(value);
-      };
-
-      self$1.WeakSet = WeakSet;
-
-      function WeakSet(iterable) {
-
-        all.set(this, new WeakMap());
-        if (iterable) iterable.forEach(this.add, this);
-      }
-    })(WeakMap);
-  }
-
-  var WeakSet$1 = self$1.WeakSet;
-
-  /*! (c) Andrea Giammarchi */
-  function disconnected(poly) {
-
-    var Event = poly.Event;
-    var WeakSet = poly.WeakSet;
-    var notObserving = true;
-    var observer = null;
-    return function observe(node) {
-      if (notObserving) {
-        notObserving = !notObserving;
-        observer = new WeakSet();
-        startObserving(node.ownerDocument);
-      }
-
-      observer.add(node);
-      return node;
+    var has = function has(node) {
+      return observed.has(node);
     };
 
-    function startObserving(document) {
-      var connected = new WeakSet();
-      var disconnected = new WeakSet();
+    var disconnect = function disconnect(node) {
+      if (has(node)) {
+        listener(node, node.removeEventListener, observed.get(node));
+        observed["delete"](node);
+      }
+    };
+
+    var connect = function connect(node, handler) {
+      disconnect(node);
+      if (!(handler || (handler = {})).handleEvent) handler.handleEvent = handleEvent;
+      listener(node, node.addEventListener, handler);
+      observed.set(node, handler);
+    };
+
+    var listener = function listener(node, method, handler) {
+      method.call(node, 'disconnected', handler);
+      method.call(node, 'connected', handler);
+    };
+
+    var notifyObserved = function notifyObserved(nodes, type, wmin, wmout) {
+      for (var length = nodes.length, i = 0; i < length; i++) {
+        notifyTarget(nodes[i], type, wmin, wmout);
+      }
+    };
+
+    var notifyTarget = function notifyTarget(node, type, wmin, wmout) {
+      if (has(node) && !wmin.has(node)) {
+        wmout["delete"](node);
+        wmin.set(node, 0);
+        node.dispatchEvent(new (CE || CustomEvent)(type));
+      }
+
+      notifyObserved(node[parse || 'children'] || [], type, wmin, wmout);
+    };
+
+    var mo = new (MO || MutationObserver)(function (nodes) {
+      for (var length = nodes.length, i = 0; i < length; i++) {
+        var _nodes$i = nodes[i],
+            removedNodes = _nodes$i.removedNodes,
+            addedNodes = _nodes$i.addedNodes;
+        notifyObserved(removedNodes, 'disconnected', wmout, wmin);
+        notifyObserved(addedNodes, 'connected', wmin, wmout);
+      }
+    });
+    mo.observe(root || document, {
+      subtree: true,
+      childList: true
+    });
+    return {
+      has: has,
+      connect: connect,
+      disconnect: disconnect,
+      kill: function kill() {
+        mo.disconnect();
+      }
+    };
+  };
+
+  function handleEvent(event) {
+    if (event.type in this) this[event.type](event);
+  }
+
+  var Lie = typeof Promise === 'function' ? Promise : function (fn) {
+    var queue = [],
+        resolved = 0,
+        value;
+    fn(function ($) {
+      value = $;
+      resolved = 1;
+      queue.splice(0).forEach(then);
+    });
+    return {
+      then: then
+    };
+
+    function then(fn) {
+      return resolved ? setTimeout(fn, 0, value) : queue.push(fn), this;
+    }
+  };
+
+  var h = null,
+      schedule = new Set();
+  var hooks = new WeakMap();
+
+  var invoke = function invoke(effect) {
+    var $ = effect.$,
+        r = effect.r,
+        h = effect.h;
+
+    if (isFunction(r)) {
+      fx.get(h)["delete"](effect);
+      r();
+    }
+
+    if (isFunction(effect.r = $())) fx.get(h).add(effect);
+  };
+
+  var runSchedule = function runSchedule() {
+    var previous = schedule;
+    schedule = new Set();
+    previous.forEach(update);
+  };
+
+  var fx = new WeakMap();
+  var effects = [];
+  var layoutEffects = [];
+  function different(value, i) {
+    return value !== this[i];
+  }
+  var dropEffect = function dropEffect(hook) {
+    var effects = fx.get(hook);
+    if (effects) wait.then(function () {
+      effects.forEach(function (effect) {
+        effect.r();
+        effect.r = null;
+      });
+      effects.clear();
+    });
+  };
+  var getInfo = function getInfo() {
+    return hooks.get(h);
+  };
+  var hasEffect = function hasEffect(hook) {
+    return fx.has(hook);
+  };
+  var isFunction = function isFunction(f) {
+    return typeof f === 'function';
+  };
+  var hooked = function hooked(callback) {
+    var info = {
+      h: hook,
+      c: null,
+      a: null,
+      e: 0,
+      i: 0,
+      s: []
+    };
+    hooks.set(hook, info);
+    return hook;
+
+    function hook() {
+      var p = h;
+      h = hook;
+      info.e = info.i = 0;
 
       try {
-        new MutationObserver(changes).observe(document, {
-          subtree: true,
-          childList: true
-        });
-      } catch (o_O) {
-        var timer = 0;
-        var records = [];
-
-        var reschedule = function reschedule(record) {
-          records.push(record);
-          clearTimeout(timer);
-          timer = setTimeout(function () {
-            changes(records.splice(timer = 0, records.length));
-          }, 0);
-        };
-
-        document.addEventListener('DOMNodeRemoved', function (event) {
-          reschedule({
-            addedNodes: [],
-            removedNodes: [event.target]
-          });
-        }, true);
-        document.addEventListener('DOMNodeInserted', function (event) {
-          reschedule({
-            addedNodes: [event.target],
-            removedNodes: []
-          });
-        }, true);
-      }
-
-      function changes(records) {
-        for (var record, length = records.length, i = 0; i < length; i++) {
-          record = records[i];
-          dispatchAll(record.removedNodes, 'disconnected', disconnected, connected);
-          dispatchAll(record.addedNodes, 'connected', connected, disconnected);
-        }
-      }
-
-      function dispatchAll(nodes, type, wsin, wsout) {
-        for (var node, event = new Event(type), length = nodes.length, i = 0; i < length; (node = nodes[i++]).nodeType === 1 && dispatchTarget(node, event, type, wsin, wsout)) {
-        }
-      }
-
-      function dispatchTarget(node, event, type, wsin, wsout) {
-        if (observer.has(node) && !wsin.has(node)) {
-          wsout["delete"](node);
-          wsin.add(node);
-          node.dispatchEvent(event);
-          /*
-          // The event is not bubbling (perf reason: should it?),
-          // hence there's no way to know if
-          // stop/Immediate/Propagation() was called.
-          // Should DOM Level 0 work at all?
-          // I say it's a YAGNI case for the time being,
-          // and easy to implement in user-land.
-          if (!event.cancelBubble) {
-            var fn = node['on' + type];
-            if (fn)
-              fn.call(node, event);
-          }
-          */
-        }
-
-        for (var // apparently is node.children || IE11 ... ^_^;;
-        // https://github.com/WebReflection/disconnected/issues/1
-        children = node.children || [], length = children.length, i = 0; i < length; dispatchTarget(children[i++], event, type, wsin, wsout)) {
-        }
+        return callback.apply(info.c = this, info.a = arguments);
+      } finally {
+        h = p;
+        if (effects.length) wait.then(effects.forEach.bind(effects.splice(0), invoke));
+        if (layoutEffects.length) layoutEffects.splice(0).forEach(invoke);
       }
     }
-  }
+  };
+  var reschedule = function reschedule(info) {
+    if (!schedule.has(info)) {
+      info.e = 1;
+      schedule.add(info);
+      wait.then(runSchedule);
+    }
+  };
+  var update = function update(_ref) {
+    var h = _ref.h,
+        c = _ref.c,
+        a = _ref.a,
+        e = _ref.e;
+    // avoid running schedules when the hook is
+    // re-executed before such schedule happens
+    if (e) h.apply(c, a);
+  };
+  var wait = new Lie(function ($) {
+    return $();
+  });
 
-  var compat = typeof cancelAnimationFrame === 'function';
-  var cAF = compat ? cancelAnimationFrame : clearTimeout;
-  var rAF = compat ? requestAnimationFrame : setTimeout;
-  function reraf(limit) {
-    var force, timer, callback, self, args;
-    reset();
-    return function reschedule(_callback, _self, _args) {
-      callback = _callback;
-      self = _self;
-      args = _args;
-      if (!timer) timer = rAF(invoke);
-      if (--force < 0) stop(true);
-      return stop;
+  var createContext = function createContext(value) {
+    return {
+      _: new Set(),
+      provide: provide,
+      value: value
     };
+  };
+  var useContext = function useContext(_ref) {
+    var _ = _ref._,
+        value = _ref.value;
 
-    function invoke() {
-      reset();
-      callback.apply(self, args || []);
-    }
+    _.add(getInfo());
 
-    function reset() {
-      force = limit || Infinity;
-      timer = compat ? 0 : null;
-    }
+    return value;
+  };
 
-    function stop(flush) {
-      var didStop = !!timer;
+  function provide(newValue) {
+    var _ = this._,
+        value = this.value;
 
-      if (didStop) {
-        cAF(timer);
-        if (flush) invoke();
-      }
+    if (value !== newValue) {
+      this._ = new Set();
+      this.value = newValue;
 
-      return didStop;
+      _.forEach(update);
     }
   }
+
+  var useCallback = function useCallback(fn, guards) {
+    return useMemo(function () {
+      return fn;
+    }, guards);
+  };
+  var useMemo = function useMemo(memo, guards) {
+    var info = getInfo();
+    var i = info.i,
+        s = info.s;
+    if (i === s.length || !guards || guards.some(different, s[i]._)) s[i] = {
+      $: memo(),
+      _: guards
+    };
+    return s[info.i++].$;
+  };
+
+  var createEffect = function createEffect(stack) {
+    return function (callback, guards) {
+      var info = getInfo();
+      var i = info.i,
+          s = info.s,
+          h = info.h;
+      var call = i === s.length;
+
+      if (call) {
+        if (!fx.has(h)) fx.set(h, new Set());
+        s.push({
+          $: callback,
+          _: guards,
+          r: null,
+          h: h
+        });
+      }
+
+      var effect = s[info.i++];
+      if (call || !guards || guards.some(different, effect._)) stack.push(effect);
+    };
+  };
+
+  var useEffect = createEffect(effects);
+  var useLayoutEffect = createEffect(layoutEffects);
+
+  var getValue = function getValue(value, f) {
+    return isFunction(f) ? f(value) : f;
+  };
+
+  var useReducer = function useReducer(reducer, value, init) {
+    var info = getInfo();
+    var i = info.i,
+        s = info.s;
+    if (i === s.length) s.push({
+      $: isFunction(init) ? init(value) : getValue(void 0, value),
+      set: function set(value) {
+        s[i].$ = reducer(s[i].$, value);
+        reschedule(info);
+      }
+    });
+    var _s$info$i = s[info.i++],
+        $ = _s$info$i.$,
+        set = _s$info$i.set;
+    return [$, set];
+  };
+  var useState = function useState(value) {
+    return useReducer(getValue, value);
+  };
+
+  var useRef = function useRef(current) {
+    var info = getInfo();
+    var i = info.i,
+        s = info.s;
+    if (i === s.length) s.push({
+      current: current
+    });
+    return s[info.i++];
+  };
+
+  /*! (c) Andrea Giammarchi - ISC */
+  var h$1 = null,
+      c = null,
+      a = null;
+  var fx$1 = new WeakMap();
+
+  var wrap = function wrap(h, c, a, reduced) {
+    return h ? [reduced[0], function (value) {
+      if (!fx$1.has(h)) {
+        fx$1.set(h, 0);
+        wait.then(function () {
+          fx$1["delete"](h);
+          h.apply(c, a);
+        });
+      }
+
+      reduced[1](value);
+    }] : reduced;
+  };
+
+  var hooked$1 = function hooked$1(callback, outer) {
+    return hooked(outer ? function hook() {
+      var ph = h$1,
+          pc = c,
+          pa = a;
+      h$1 = hook;
+      c = this;
+      a = arguments;
+
+      try {
+        return callback.apply(c, a);
+      } finally {
+        h$1 = ph;
+        c = pc;
+        a = pa;
+      }
+    } : callback);
+  };
+  var useReducer$1 = function useReducer$1(reducer, value, init) {
+    return wrap(h$1, c, a, useReducer(reducer, value, init));
+  };
+  var useState$1 = function useState$1(value) {
+    return wrap(h$1, c, a, useState(value));
+  };
+
+  /*! (c) Andrea Giammarchi - ISC */
+  var observer = null;
+
+  var find = function find(_ref) {
+    var firstChild = _ref.firstChild;
+    if (firstChild && firstChild.nodeType !== 1 && !(firstChild = firstChild.nextElementSibling)) throw 'unobservable';
+    return firstChild;
+  };
+
+  var get = function get(node) {
+    var nodeType = node.nodeType;
+    if (nodeType) return nodeType === 1 ? node : find(node);else {
+      // give a chance to facades to return a reasonable value
+      var value = node.valueOf();
+      return value !== node ? get(value) : find(value);
+    }
+  };
+
+  var hooked$2 = function hooked(fn, outer) {
+    var hook = hooked$1(fn, outer);
+    return function () {
+      var node = hook.apply(this, arguments);
+
+      if (hasEffect(hook)) {
+        var element = get(node);
+        if (!observer) observer = observe(element.ownerDocument, 'children', CustomEvent$1);
+        if (!observer.has(element)) observer.connect(element, {
+          disconnected: function disconnected() {
+            dropEffect(hook);
+          }
+        });
+      }
+
+      return node;
+    };
+  };
 
   var umap = (function (_) {
     return {
@@ -236,299 +457,6 @@ self.uland = (function (exports) {
       }
     };
   });
-
-  /*! (c) Andrea Giammarchi - ISC */
-  var state = null; // main exports
-
-  var augmentor = function augmentor(fn) {
-    var stack = [];
-    return function hook() {
-      var prev = state;
-      var after = [];
-      state = {
-        hook: hook,
-        args: arguments,
-        stack: stack,
-        i: 0,
-        length: stack.length,
-        after: after
-      };
-
-      try {
-        return fn.apply(null, arguments);
-      } finally {
-        state = prev;
-
-        for (var i = 0, length = after.length; i < length; i++) {
-          after[i]();
-        }
-      }
-    };
-  };
-  var contextual = function contextual(fn) {
-    var check = true;
-    var context = null;
-    var augmented = augmentor(function () {
-      return fn.apply(context, arguments);
-    });
-    return function hook() {
-      var result = augmented.apply(context = this, arguments); // perform hasEffect check only once
-
-      if (check) {
-        check = !check; // and copy same Array if any FX was used
-
-        if (hasEffect(augmented)) effects.set(hook, effects.get(augmented));
-      }
-
-      return result;
-    };
-  }; // useReducer
-
-  var updates = umap(new WeakMap());
-
-  var hookdate = function hookdate(hook, ctx, args) {
-    hook.apply(ctx, args);
-  };
-
-  var defaults = {
-    async: false,
-    always: false
-  };
-
-  var getValue = function getValue(value, f) {
-    return typeof f == 'function' ? f(value) : f;
-  };
-
-  var useReducer = function useReducer(reducer, value, init, options) {
-    var i = state.i++;
-    var _state = state,
-        hook = _state.hook,
-        args = _state.args,
-        stack = _state.stack,
-        length = _state.length;
-    if (i === length) state.length = stack.push({});
-    var ref = stack[i];
-    ref.args = args;
-
-    if (i === length) {
-      var fn = typeof init === 'function';
-
-      var _ref = (fn ? options : init) || options || defaults,
-          asy = _ref.async,
-          always = _ref.always;
-
-      ref.$ = fn ? init(value) : getValue(void 0, value);
-      ref._ = asy ? updates.get(hook) || updates.set(hook, reraf()) : hookdate;
-
-      ref.f = function (value) {
-        var $value = reducer(ref.$, value);
-
-        if (always || ref.$ !== $value) {
-          ref.$ = $value;
-
-          ref._(hook, null, ref.args);
-        }
-      };
-    }
-
-    return [ref.$, ref.f];
-  }; // useState
-
-  var useState = function useState(value, options) {
-    return useReducer(getValue, value, void 0, options);
-  }; // useContext
-
-  var hooks = new WeakMap();
-
-  var invoke = function invoke(_ref2) {
-    var hook = _ref2.hook,
-        args = _ref2.args;
-    hook.apply(null, args);
-  };
-
-  var createContext = function createContext(value) {
-    var context = {
-      value: value,
-      provide: provide
-    };
-    hooks.set(context, []);
-    return context;
-  };
-  var useContext = function useContext(context) {
-    var _state2 = state,
-        hook = _state2.hook,
-        args = _state2.args;
-    var stack = hooks.get(context);
-    var info = {
-      hook: hook,
-      args: args
-    };
-    if (!stack.some(update, info)) stack.push(info);
-    return context.value;
-  };
-
-  function provide(value) {
-    if (this.value !== value) {
-      this.value = value;
-      hooks.get(this).forEach(invoke);
-    }
-  }
-
-  function update(_ref3) {
-    var hook = _ref3.hook;
-    return hook === this.hook;
-  } // dropEffect, hasEffect, useEffect, useLayoutEffect
-
-
-  var effects = new WeakMap();
-  var fx = umap(effects);
-
-  var stop = function stop() {};
-
-  var createEffect = function createEffect(asy) {
-    return function (effect, guards) {
-      var i = state.i++;
-      var _state3 = state,
-          hook = _state3.hook,
-          after = _state3.after,
-          stack = _state3.stack,
-          length = _state3.length;
-
-      if (i < length) {
-        var info = stack[i];
-        var _update = info.update,
-            values = info.values,
-            _stop = info.stop;
-
-        if (!guards || guards.some(different, values)) {
-          info.values = guards;
-          if (asy) _stop(asy);
-          var clean = info.clean;
-
-          if (clean) {
-            info.clean = null;
-            clean();
-          }
-
-          var _invoke = function _invoke() {
-            info.clean = effect();
-          };
-
-          if (asy) _update(_invoke);else after.push(_invoke);
-        }
-      } else {
-        var _update2 = asy ? reraf() : stop;
-
-        var _info = {
-          clean: null,
-          update: _update2,
-          values: guards,
-          stop: stop
-        };
-        state.length = stack.push(_info);
-        (fx.get(hook) || fx.set(hook, [])).push(_info);
-
-        var _invoke2 = function _invoke2() {
-          _info.clean = effect();
-        };
-
-        if (asy) _info.stop = _update2(_invoke2);else after.push(_invoke2);
-      }
-    };
-  };
-
-  var dropEffect = function dropEffect(hook) {
-    (effects.get(hook) || []).forEach(function (info) {
-      var clean = info.clean,
-          stop = info.stop;
-      stop();
-
-      if (clean) {
-        info.clean = null;
-        clean();
-      }
-    });
-  };
-  var hasEffect = effects.has.bind(effects);
-  var useEffect = createEffect(true);
-  var useLayoutEffect = createEffect(false); // useMemo, useCallback
-
-  var useMemo = function useMemo(memo, guards) {
-    var i = state.i++;
-    var _state4 = state,
-        stack = _state4.stack,
-        length = _state4.length;
-    if (i === length) state.length = stack.push({
-      $: memo(),
-      _: guards
-    });else if (!guards || guards.some(different, stack[i]._)) stack[i] = {
-      $: memo(),
-      _: guards
-    };
-    return stack[i].$;
-  };
-  var useCallback = function useCallback(fn, guards) {
-    return useMemo(function () {
-      return fn;
-    }, guards);
-  }; // useRef
-
-  var useRef = function useRef(value) {
-    var i = state.i++;
-    var _state5 = state,
-        stack = _state5.stack,
-        length = _state5.length;
-    if (i === length) state.length = stack.push({
-      current: value
-    });
-    return stack[i];
-  };
-
-  function different(value, i) {
-    return value !== this[i];
-  }
-
-  /*! (c) Andrea Giammarchi - ISC */
-
-  var find = function find(node) {
-    var firstChild = node.firstChild;
-
-    while (firstChild && firstChild.nodeType !== 1) {
-      firstChild = firstChild.nextSibling;
-    }
-
-    if (firstChild) return firstChild;
-    throw 'unobservable';
-  };
-
-  var observe = disconnected({
-    Event: CustomEvent$1,
-    WeakSet: WeakSet$1
-  });
-
-  var observer = function observer(element, handler) {
-    var nodeType = element.nodeType;
-
-    if (nodeType) {
-      var node = nodeType === 1 ? element : find(element);
-      observe(node);
-      node.addEventListener('disconnected', handler, false);
-    } else {
-      var value = element.valueOf(); // give a chance to facades to return a reasonable value
-
-      if (value !== element) observer(value, handler);
-    }
-  };
-
-  var augmentor$1 = function augmentor$1(fn) {
-    var handler = null;
-    var hook = augmentor(fn);
-    return function () {
-      var node = hook.apply(this, arguments);
-      if (hasEffect(hook)) observer(node, handler || (handler = dropEffect.bind(null, hook)));
-      return node;
-    };
-  };
 
   var attr = /([^\s\\>"'=]+)\s*=\s*(['"]?)$/;
   var empty = /^(?:area|base|br|col|embed|hr|img|input|keygen|link|menuitem|meta|param|source|track|wbr)$/i;
@@ -912,19 +840,19 @@ self.uland = (function (exports) {
       createTreeWalker = _document.createTreeWalker,
       importNode = _document.importNode;
 
-  var IE = importNode.length != 1; // IE11 and old Edge discard empty nodes when cloning, potentially
+  var isImportNodeLengthWrong = importNode.length != 1; // IE11 and old Edge discard empty nodes when cloning, potentially
   // resulting in broken paths to find updates. The workaround here
   // is to import once, upfront, the fragment that will be cloned
   // later on, so that paths are retrieved from one already parsed,
   // hence without missing child nodes once re-cloned.
 
-  var createFragment = IE ? function (text, type) {
+  var createFragment = isImportNodeLengthWrong ? function (text, type) {
     return importNode.call(document, createContent(text, type), true);
   } : createContent; // IE11 and old Edge have a different createTreeWalker signature that
   // has been deprecated in other browsers. This export is needed only
   // to guarantee the TreeWalker doesn't show warnings and, ultimately, works
 
-  var createWalker = IE ? function (fragment) {
+  var createWalker = isImportNodeLengthWrong ? function (fragment) {
     return createTreeWalker.call(document, fragment, 1 | 128, null, false);
   } : function (fragment) {
     return createTreeWalker.call(document, fragment, 1 | 128);
@@ -1144,6 +1072,7 @@ self.uland = (function (exports) {
 
 
         if (/^(?:style|textarea)$/i.test(node.tagName) && node.textContent.trim() === "<!--".concat(search, "-->")) {
+          node.textContent = '';
           nodes.push({
             type: 'text',
             path: createPath(node)
@@ -1365,73 +1294,51 @@ self.uland = (function (exports) {
   var cache$2 = umap(new WeakMap());
 
   var render$1 = function render$1(where, what) {
-    var hook = typeof what === 'function' ? what() : what;
-    var info = cache$2.get(where) || cache$2.set(where, createCache$1(null));
-    info.w = where;
-    info.W = what;
-    return render(where, hook instanceof Hook ? unroll$1(info, hook) : (unrollHole(info, hook), hook));
-  };
-  var update$1 = false;
-
-  var updateEntry = function updateEntry(entry, node) {
-    if (node !== entry.node) {
-      if (entry.node) update$1 = true;
-      entry.node = node;
-    }
+    return (cache$2.get(where) || cache$2.set(where, {
+      c: createCache$1(),
+      h: hooked$2(function (what) {
+        var value = typeof what === 'function' ? what() : what;
+        return render(where, value instanceof Hook ? unroll$1(this.c, value) : (unrollHole(this.c, value), value));
+      }, where)
+    })).h(what);
   };
 
   var createHook = function createHook(info, entry) {
-    return augmentor$1(function () {
-      var hole = entry.fn.apply(null, arguments);
+    return hooked$2(function () {
+      var hole = entry.f.apply(this, arguments);
 
       if (hole instanceof Hole) {
         unrollHole(info, hole);
-        updateEntry(entry, view(entry, hole));
-      } else updateEntry(entry, hole);
+        entry.$ = view(entry, hole);
+      } else entry.$ = hole;
 
-      try {
-        return entry.node;
-      } finally {
-        if (update$1) {
-          update$1 = false;
-          var p = info;
-
-          while (p.p) {
-            p = p.p;
-          }
-
-          render$1(p.w, p.W);
-        }
-      }
+      return entry.$;
     });
   };
 
-  var createCache$1 = function createCache(p) {
+  var createCache$1 = function createCache() {
     return {
-      p: p,
-      stack: [],
-      entry: null
+      s: [],
+      e: null
     };
   };
 
   var unroll$1 = function unroll(info, _ref) {
-    var _entry;
+    var f = _ref.f,
+        c = _ref.c,
+        a = _ref.a;
+    var e = info.e;
 
-    var fn = _ref.fn,
-        template = _ref.template,
-        values = _ref.values;
-    var entry = info.entry;
-
-    if (!entry || entry.fn !== fn) {
-      info.entry = entry = {
-        fn: fn,
-        hook: null,
-        node: null
+    if (!e || e.f !== f) {
+      info.e = e = {
+        f: f,
+        h: null,
+        $: null
       };
-      entry.hook = createHook(createCache$1(info), entry);
+      e.h = createHook(createCache$1(), e);
     }
 
-    return (_entry = entry).hook.apply(_entry, [template].concat(_toConsumableArray(values)));
+    return e.h.apply(c, a);
   };
 
   var unrollHole = function unrollHole(info, _ref2) {
@@ -1440,57 +1347,52 @@ self.uland = (function (exports) {
   };
 
   var unrollValues$1 = function unrollValues(info, values, length) {
-    var stack = info.stack;
+    var s = info.s;
 
     for (var i = 0; i < length; i++) {
       var hook = values[i];
-      if (hook instanceof Hook) values[i] = unroll$1(stack[i] || (stack[i] = createCache$1(info)), hook);else if (hook instanceof Hole) unrollHole(stack[i] || (stack[i] = createCache$1(info)), hook);else if (isArray$1(hook)) unrollValues(stack[i] || (stack[i] = createCache$1(info)), hook, hook.length);else stack[i] = null;
+      if (hook instanceof Hook) values[i] = unroll$1(s[i] || (s[i] = createCache$1()), hook);else if (hook instanceof Hole) unrollHole(s[i] || (s[i] = createCache$1()), hook);else if (isArray$1(hook)) unrollValues(s[i] || (s[i] = createCache$1()), hook, hook.length);else s[i] = null;
     }
 
-    if (length < stack.length) stack.splice(length);
+    if (length < s.length) s.splice(length);
   };
 
-  var view = function view(entry, _ref3) {
+  var view = function view(e, _ref3) {
     var type = _ref3.type,
         template = _ref3.template,
         values = _ref3.values;
-    return (type === 'svg' ? svg : html)["for"](entry, type).apply(void 0, [template].concat(_toConsumableArray(values)));
+    return (type === 'svg' ? svg : html)["for"](e, type).apply(void 0, [template].concat(_toConsumableArray(values)));
   };
 
-  function Component(fn) {
-    return function (template) {
-      for (var _len3 = arguments.length, values = new Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {
-        values[_key3 - 1] = arguments[_key3];
-      }
-
-      return new Hook(fn, template, values);
+  function Component(f) {
+    return function () {
+      return new Hook(f, this, arguments);
     };
   }
 
-  function Hook(fn, template, values) {
-    this.fn = fn;
-    this.template = template;
-    this.values = values;
+  function Hook(f, c, a) {
+    this.f = f;
+    this.c = c;
+    this.a = a;
   }
 
   function createFor(uhtml) {
     var cache = umap(new WeakMap());
-    return function (entry, id) {
-      var store = cache.get(entry) || cache.set(entry, create$1(null));
-      var info = store[id] || (store[id] = createCache$1(null));
+    return function (e, id) {
+      var store = cache.get(e) || cache.set(e, create$1(null));
+      var info = store[id] || (store[id] = createCache$1());
       return function (template) {
-        for (var _len4 = arguments.length, values = new Array(_len4 > 1 ? _len4 - 1 : 0), _key4 = 1; _key4 < _len4; _key4++) {
-          values[_key4 - 1] = arguments[_key4];
+        for (var _len3 = arguments.length, values = new Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {
+          values[_key3 - 1] = arguments[_key3];
         }
 
         unrollValues$1(info, values);
-        return uhtml["for"](entry, id).apply(void 0, [template].concat(values));
+        return uhtml["for"](e, id).apply(void 0, [template].concat(values));
       };
     };
   }
 
   exports.Component = Component;
-  exports.contextual = contextual;
   exports.createContext = createContext;
   exports.html = html$1;
   exports.render = render$1;
@@ -1500,9 +1402,9 @@ self.uland = (function (exports) {
   exports.useEffect = useEffect;
   exports.useLayoutEffect = useLayoutEffect;
   exports.useMemo = useMemo;
-  exports.useReducer = useReducer;
+  exports.useReducer = useReducer$1;
   exports.useRef = useRef;
-  exports.useState = useState;
+  exports.useState = useState$1;
 
   Object.defineProperty(exports, '__esModule', { value: true });
 

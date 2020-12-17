@@ -6,9 +6,9 @@ export default {
   plugins: [
     includePaths({
       include: {
-        '@ungap/custom-event': 'node_modules/@ungap/degap/custom-event.js',
-        '@ungap/weakset': 'node_modules/@ungap/degap/weakset.js'
-      },
+        '@ungap/custom-event': 'node_modules/uhooks-dom/esm/custom-event.js',
+        '@webreflection/lie': 'node_modules/uhooks/esm/promise.js'
+      }
     }),
     resolve({module: true}),
     terser()
