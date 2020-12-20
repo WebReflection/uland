@@ -23,7 +23,7 @@
 
       render(
         document.body,
-        html`<div class="container">${App(appProps)}</div>`
+        () => html`<div class="container">${App(appProps)}</div>`
       );
     });
     </script>

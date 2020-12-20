@@ -1,4 +1,4 @@
-import {augmentor} from 'dom-augmentor';
+import {hooked} from 'uhooks-dom';
 import umap from 'umap';
 
 import {
@@ -18,71 +18,54 @@ const svg = (template, ...values) => new Hole('svg', template, values);
 svg.for = createFor($svg);
 
 const cache = umap(new WeakMap);
-const render = (where, what) => {
-  const hook = typeof what === 'function' ? what() : what;
-  const info = cache.get(where) || cache.set(where, createCache(null));
-  info.w = where;
-  info.W = what;
-  return $render(
-    where,
-    hook instanceof Hook ?
-      unroll(info, hook) :
-      (unrollHole(info, hook), hook)
-  );
-};
+
+const render = (where, what) => (
+  cache.get(where) || cache.set(where, {
+    c: createCache(),
+    h: hooked(
+      function (what) {
+        const value = typeof what === 'function' ? what() : what;
+        return $render(
+          where,
+          value instanceof Hook ?
+            unroll(this.c, value) :
+            (unrollHole(this.c, value), value)
+        );
+      },
+      where
+    )
+  })
+).h(what);
 
 export {Component, render, html, svg};
 
 export {
-  contextual,
-  useState,
-  useEffect,
-  useContext, createContext,
-  useRef,
-  useReducer,
-  useCallback,
-  useMemo,
-  useLayoutEffect
-} from 'dom-augmentor';
+  createContext, useContext,
+  useCallback, useMemo,
+  useEffect, useLayoutEffect,
+  useReducer, useState, useRef
+} from 'uhooks-dom';
 
-let update = false;
-const updateEntry = (entry, node) => {
-  if (node !== entry.node) {
-    if (entry.node)
-      update = true;
-    entry.node = node;
-  }
-};
-
-const createHook = (info, entry) => augmentor(function () {
-  const hole = entry.fn.apply(null, arguments);
+const createHook = (info, entry) => hooked(function () {
+  const hole = entry.f.apply(this, arguments);
   if (hole instanceof Hole) {
     unrollHole(info, hole);
-    updateEntry(entry, view(entry, hole));
+    entry.$ = view(entry, hole);
   }
   else
-    updateEntry(entry, hole);
-  try { return entry.node; }
-  finally {
-    if (update) {
-      update = false;
-      let p = info;
-      while (p.p)
-        p = p.p;
-      render(p.w, p.W);
-    }
-  }
+    entry.$ = hole;
+  return entry.$;
 });
 
-const createCache = p => ({p, stack: [], entry: null});
+const createCache = () => ({s: [], e: null});
 
-const unroll = (info, {fn, template, values}) => {
-  let {entry} = info;
-  if (!entry || entry.fn !== fn) {
-    info.entry = (entry = {fn, hook: null, node: null});
-    entry.hook = createHook(createCache(info), entry);
+const unroll = (info, {f, c, a}) => {
+  let {e} = info;
+  if (!e || e.f !== f) {
+    info.e = (e = {f, h: null, $: null});
+    e.h = createHook(createCache(), e);
   }
-  return entry.hook(template, ...values);
+  return e.h.apply(c, a);
 };
 
 const unrollHole = (info, {values}) => {
@@ -90,45 +73,47 @@ const unrollHole = (info, {values}) => {
 };
 
 const unrollValues = (info, values, length) => {
-  const {stack} = info;
+  const {s} = info;
   for (let i = 0; i < length; i++) {
     const hook = values[i];
     if (hook instanceof Hook)
-      values[i] = unroll(stack[i] || (stack[i] = createCache(info)), hook);
+      values[i] = unroll(s[i] || (s[i] = createCache()), hook);
     else if (hook instanceof Hole)
-      unrollHole(stack[i] || (stack[i] = createCache(info)), hook);
+      unrollHole(s[i] || (s[i] = createCache()), hook);
     else if (isArray(hook))
-      unrollValues(stack[i] || (stack[i] = createCache(info)), hook, hook.length);
+      unrollValues(s[i] || (s[i] = createCache()), hook, hook.length);
     else
-      stack[i] = null;
+      s[i] = null;
   }
-  if (length < stack.length)
-    stack.splice(length);
+  if (length < s.length)
+    s.splice(length);
 };
 
-const view = (entry, {type, template, values}) =>
+const view = (e, {type, template, values}) =>
               (type === 'svg' ? $svg : $html)
-                .for(entry, type)(template, ...values);
+                .for(e, type)(template, ...values);
 
-function Component(fn) {
-  return (template, ...values) => new Hook(fn, template, values);
+function Component(f) {
+  return function () {
+    return new Hook(f, this, arguments);
+  };
 }
 
-function Hook(fn, template, values) {
-  this.fn = fn;
-  this.template = template;
-  this.values = values;
+function Hook(f, c, a) {
+  this.f = f;
+  this.c = c;
+  this.a = a;
 }
 
 function createFor(uhtml) {
   const cache = umap(new WeakMap);
   return (
-    (entry, id) => {
-      const store = cache.get(entry) || cache.set(entry, create(null));
-      const info = store[id] || (store[id] = createCache(null));
+    (e, id) => {
+      const store = cache.get(e) || cache.set(e, create(null));
+      const info = store[id] || (store[id] = createCache());
       return (template, ...values) => {
         unrollValues(info, values);
-        return uhtml.for(entry, id)(template, ...values);
+        return uhtml.for(e, id)(template, ...values);
       };
     }
   );

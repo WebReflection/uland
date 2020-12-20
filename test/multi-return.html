@@ -14,19 +14,19 @@
       const MyComp = Component(function MyComp () {
         const [state, setState] = useState(false);
 
-        function flipTrue (ev) {
-          ev.preventDefault();
+        console.log('state', state);
 
+        function flipTrue (ev) {
+          console.log('flipping to true');
+          ev.preventDefault();
           setState(true);
         }
 
         function flipFalse (ev) {
+          console.log('flipping to false');
           ev.preventDefault();
-
           setState(false);
         }
-
-        console.log(state);
 
         if (state) {
           return html`
