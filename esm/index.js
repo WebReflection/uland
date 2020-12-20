@@ -1,5 +1,6 @@
 import {hooked} from 'uhooks-dom';
 import umap from 'umap';
+import {isArray} from 'uarray';
 
 import {
   Hole,
@@ -8,7 +9,6 @@ import {
   render as $render
 } from 'uhtml';
 
-const {isArray} = Array;
 const {create} = Object;
 
 const html = (template, ...values) => new Hole('html', template, values);

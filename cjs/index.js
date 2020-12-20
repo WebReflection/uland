@@ -1,6 +1,7 @@
 'use strict';
 const {hooked} = require('uhooks-dom');
 const umap = (m => m.__esModule ? /* istanbul ignore next */ m.default : /* istanbul ignore next */ m)(require('umap'));
+const {isArray} = require('uarray');
 
 const {
   Hole,
@@ -9,7 +10,6 @@ const {
   render: $render
 } = require('uhtml');
 
-const {isArray} = Array;
 const {create} = Object;
 
 const html = (template, ...values) => new Hole('html', template, values);

@@ -458,6 +458,11 @@ self.uland = (function (exports) {
     };
   });
 
+  var isArray = Array.isArray;
+  var _ref = [],
+      indexOf = _ref.indexOf,
+      slice = _ref.slice;
+
   var attr = /([^\s\\>"'=]+)\s*=\s*(['"]?)$/;
   var empty = /^(?:area|base|br|col|embed|hr|img|input|keygen|link|menuitem|meta|param|source|track|wbr)$/i;
   var node = /<[a-z][^>]+$/i;
@@ -492,11 +497,6 @@ self.uland = (function (exports) {
     var output = text.join('').trim();
     return svg ? output : output.replace(selfClosing, regular);
   });
-
-  var isArray = Array.isArray;
-  var _ref = [],
-      indexOf = _ref.indexOf,
-      slice = _ref.slice;
 
   var ELEMENT_NODE = 1;
   var nodeType = 111;
@@ -1269,7 +1269,6 @@ self.uland = (function (exports) {
   var html = tag('html');
   var svg = tag('svg');
 
-  var isArray$1 = Array.isArray;
   var create$1 = Object.create;
 
   var html$1 = function html(template) {
@@ -1351,7 +1350,7 @@ self.uland = (function (exports) {
 
     for (var i = 0; i < length; i++) {
       var hook = values[i];
-      if (hook instanceof Hook) values[i] = unroll$1(s[i] || (s[i] = createCache$1()), hook);else if (hook instanceof Hole) unrollHole(s[i] || (s[i] = createCache$1()), hook);else if (isArray$1(hook)) unrollValues(s[i] || (s[i] = createCache$1()), hook, hook.length);else s[i] = null;
+      if (hook instanceof Hook) values[i] = unroll$1(s[i] || (s[i] = createCache$1()), hook);else if (hook instanceof Hole) unrollHole(s[i] || (s[i] = createCache$1()), hook);else if (isArray(hook)) unrollValues(s[i] || (s[i] = createCache$1()), hook, hook.length);else s[i] = null;
     }
 
     if (length < s.length) s.splice(length);
