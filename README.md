@@ -19,6 +19,8 @@ Same API, except the exports are `{Component, render, html, svg}`, where `Compon
 
 Are you looking for something even more similar to *React*? Then don't miss [🐪 kaboobie](https://github.com/WebReflection/kaboobie/#readme) out!
 
+Are you looking for *SSR* components? Then check [🦄 µland-ssr](https://github.com/WebReflection/uland-ssr#readme) out!
+
 
 ## API
 
