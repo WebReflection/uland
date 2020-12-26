@@ -1,0 +1,45 @@
+<!doctype html>
+<script src="../index.js"></script>
+<script>
+const { render, html, useState, useEffect, Component } = uland;
+
+const waitWith = ( delay, value ) => new Promise( ( resolve, reject ) => setTimeout( () => resolve( value ), delay ) );
+
+window.icon = new Set;
+window.setIcon = new Set;
+
+const Icon = Component( ( props ) => {
+  const [ icon, setIcon ] = useState( null );
+  useEffect( () => {
+      console.log( "running effect" );
+      var getIcon = async () => {
+        const value = await waitWith( 3000, 'testing' );
+        setIcon( value );
+      }
+      getIcon();
+  }, [ icon, setIcon ] );
+  window.icon.add(icon);
+  window.setIcon.add(setIcon);
+  return html`<span>${ icon }</span>`;
+} );
+
+const App = Component( ( props ) => {
+  const [ name, setName ] = useState( 'Anonymous' );
+  const [ seconds, setSeconds ] = useState( 0 );
+  useEffect( () => {
+    const timer = setTimeout(() => setSeconds( seconds + 1 ), 1000);
+    return () => clearTimeout(timer);
+  }, [ seconds, setSeconds ] );
+  return html`
+    <h1>Hello ${ name }</h1>
+    <p>You have been ${ seconds } seconds on this page.</p>
+    <p>Your Icon is: ${ Icon() }</p>
+    <label>Your name is:
+      <input type="text" value=${ name } onInput=${ ( event ) => setName( event.target.value ) } />
+    </label>`
+} );
+
+this.onload = () => {
+  render( document.body, App() );
+};
+</script>

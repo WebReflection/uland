@@ -371,9 +371,10 @@ self.uland = (function (exports) {
       c = null,
       a = null;
   var fx$1 = new WeakMap();
+  var states = new WeakMap();
 
-  var wrap = function wrap(h, c, a, reduced) {
-    return h ? [reduced[0], function (value) {
+  var set = function set(h, c, a, update) {
+    var wrap = function wrap(value) {
       if (!fx$1.has(h)) {
         fx$1.set(h, 0);
         wait.then(function () {
@@ -382,8 +383,15 @@ self.uland = (function (exports) {
         });
       }
 
-      reduced[1](value);
-    }] : reduced;
+      update(value);
+    };
+
+    states.set(update, wrap);
+    return wrap;
+  };
+
+  var wrap = function wrap(h, c, a, state) {
+    return h ? [state[0], states.get(state[1]) || set(h, c, a, state[1])] : state;
   };
 
   var hooked$1 = function hooked$1(callback, outer) {
