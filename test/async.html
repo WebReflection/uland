@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script type="module">
+import {Component, render, html} from '../esm/index.js';
+
+const AsyncItem = Component(data => {
+  return html`
+    <div>
+      ${data}
+    </div>
+  `;
+});
+
+const AsyncList = Component(list => {
+  return html`${list.map(item => AsyncItem(item))}`;
+});
+
+render(document.body, AsyncList([
+  new Promise($ => setTimeout($, 100, 1)),
+  2,
+  Promise.resolve(3)
+]));
+
+  </script>
+</head>
+<body></body>
+</html>

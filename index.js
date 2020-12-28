@@ -3,6 +3,42 @@ self.uland = (function (exports) {
 
   
 
+  function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
+    try {
+      var info = gen[key](arg);
+      var value = info.value;
+    } catch (error) {
+      reject(error);
+      return;
+    }
+
+    if (info.done) {
+      resolve(value);
+    } else {
+      Promise.resolve(value).then(_next, _throw);
+    }
+  }
+
+  function _asyncToGenerator(fn) {
+    return function () {
+      var self = this,
+          args = arguments;
+      return new Promise(function (resolve, reject) {
+        var gen = fn.apply(self, args);
+
+        function _next(value) {
+          asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);
+        }
+
+        function _throw(err) {
+          asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);
+        }
+
+        _next(undefined);
+      });
+    };
+  }
+
   function _toConsumableArray(arr) {
     return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread();
   }
@@ -1285,23 +1321,144 @@ self.uland = (function (exports) {
 
   var create$1 = Object.create;
 
-  var html$1 = function html(template) {
-    for (var _len = arguments.length, values = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-      values[_key - 1] = arguments[_key];
-    }
+  var all = /*#__PURE__*/function () {
+    var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(values) {
+      var length, i, value;
+      return regeneratorRuntime.wrap(function _callee$(_context) {
+        while (1) {
+          switch (_context.prev = _context.next) {
+            case 0:
+              length = values.length, i = 0;
 
-    return new Hole('html', template, values);
-  };
+            case 1:
+              if (!(i < length)) {
+                _context.next = 16;
+                break;
+              }
+
+              value = values[i];
+
+              if (!Array.isArray(value)) {
+                _context.next = 9;
+                break;
+              }
+
+              _context.next = 6;
+              return all(value);
+
+            case 6:
+              values[i] = _context.sent;
+              _context.next = 13;
+              break;
+
+            case 9:
+              if (!(value instanceof Promise)) {
+                _context.next = 13;
+                break;
+              }
+
+              _context.next = 12;
+              return value;
+
+            case 12:
+              values[i] = _context.sent;
+
+            case 13:
+              i++;
+              _context.next = 1;
+              break;
+
+            case 16:
+              return _context.abrupt("return", values);
+
+            case 17:
+            case "end":
+              return _context.stop();
+          }
+        }
+      }, _callee);
+    }));
+
+    return function all(_x) {
+      return _ref.apply(this, arguments);
+    };
+  }();
+
+  var html$1 = /*#__PURE__*/function () {
+    var _ref2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(template) {
+      var _len,
+          values,
+          _key,
+          _args2 = arguments;
+
+      return regeneratorRuntime.wrap(function _callee2$(_context2) {
+        while (1) {
+          switch (_context2.prev = _context2.next) {
+            case 0:
+              for (_len = _args2.length, values = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+                values[_key - 1] = _args2[_key];
+              }
+
+              _context2.t0 = Hole;
+              _context2.t1 = template;
+              _context2.next = 5;
+              return all(values);
+
+            case 5:
+              _context2.t2 = _context2.sent;
+              return _context2.abrupt("return", new _context2.t0('html', _context2.t1, _context2.t2));
+
+            case 7:
+            case "end":
+              return _context2.stop();
+          }
+        }
+      }, _callee2);
+    }));
+
+    return function html(_x2) {
+      return _ref2.apply(this, arguments);
+    };
+  }();
 
   html$1["for"] = createFor(html);
 
-  var svg$1 = function svg(template) {
-    for (var _len2 = arguments.length, values = new Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
-      values[_key2 - 1] = arguments[_key2];
-    }
+  var svg$1 = /*#__PURE__*/function () {
+    var _ref3 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(template) {
+      var _len2,
+          values,
+          _key2,
+          _args3 = arguments;
 
-    return new Hole('svg', template, values);
-  };
+      return regeneratorRuntime.wrap(function _callee3$(_context3) {
+        while (1) {
+          switch (_context3.prev = _context3.next) {
+            case 0:
+              for (_len2 = _args3.length, values = new Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
+                values[_key2 - 1] = _args3[_key2];
+              }
+
+              _context3.t0 = Hole;
+              _context3.t1 = template;
+              _context3.next = 5;
+              return all(values);
+
+            case 5:
+              _context3.t2 = _context3.sent;
+              return _context3.abrupt("return", new _context3.t0('svg', _context3.t1, _context3.t2));
+
+            case 7:
+            case "end":
+              return _context3.stop();
+          }
+        }
+      }, _callee3);
+    }));
+
+    return function svg(_x3) {
+      return _ref3.apply(this, arguments);
+    };
+  }();
 
   svg$1["for"] = createFor(svg);
   var cache$2 = umap(new WeakMap());
@@ -1309,24 +1466,100 @@ self.uland = (function (exports) {
   var render$1 = function render$1(where, what) {
     return (cache$2.get(where) || cache$2.set(where, {
       c: createCache$1(),
-      h: hooked$2(function (what) {
-        var value = typeof what === 'function' ? what() : what;
-        return render(where, value instanceof Hook ? unroll$1(this.c, value) : (unrollHole(this.c, value), value));
-      }, where)
+      h: hooked$2( /*#__PURE__*/function () {
+        var _ref4 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(what) {
+          var value;
+          return regeneratorRuntime.wrap(function _callee4$(_context4) {
+            while (1) {
+              switch (_context4.prev = _context4.next) {
+                case 0:
+                  _context4.next = 2;
+                  return typeof what === 'function' ? what() : what;
+
+                case 2:
+                  value = _context4.sent;
+                  _context4.t0 = render;
+                  _context4.t1 = where;
+
+                  if (!(value instanceof Hook)) {
+                    _context4.next = 11;
+                    break;
+                  }
+
+                  _context4.next = 8;
+                  return unroll$1(this.c, value);
+
+                case 8:
+                  _context4.t2 = _context4.sent;
+                  _context4.next = 14;
+                  break;
+
+                case 11:
+                  _context4.next = 13;
+                  return unrollHole(this.c, value);
+
+                case 13:
+                  _context4.t2 = value;
+
+                case 14:
+                  _context4.t3 = _context4.t2;
+                  return _context4.abrupt("return", (0, _context4.t0)(_context4.t1, _context4.t3));
+
+                case 16:
+                case "end":
+                  return _context4.stop();
+              }
+            }
+          }, _callee4, this);
+        }));
+
+        return function (_x4) {
+          return _ref4.apply(this, arguments);
+        };
+      }(), where)
     })).h(what);
   };
 
   var createHook = function createHook(info, entry) {
-    return hooked$2(function () {
-      var hole = entry.f.apply(this, arguments);
+    return hooked$2( /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee5() {
+      var hole,
+          _args5 = arguments;
+      return regeneratorRuntime.wrap(function _callee5$(_context5) {
+        while (1) {
+          switch (_context5.prev = _context5.next) {
+            case 0:
+              _context5.next = 2;
+              return entry.f.apply(this, _args5);
 
-      if (hole instanceof Hole) {
-        unrollHole(info, hole);
-        entry.$ = view(entry, hole);
-      } else entry.$ = hole;
+            case 2:
+              hole = _context5.sent;
 
-      return entry.$;
-    });
+              if (!(hole instanceof Hole)) {
+                _context5.next = 9;
+                break;
+              }
+
+              _context5.next = 6;
+              return unrollHole(info, hole);
+
+            case 6:
+              entry.$ = view(entry, hole);
+              _context5.next = 10;
+              break;
+
+            case 9:
+              entry.$ = hole;
+
+            case 10:
+              return _context5.abrupt("return", entry.$);
+
+            case 11:
+            case "end":
+              return _context5.stop();
+          }
+        }
+      }, _callee5, this);
+    })));
   };
 
   var createCache$1 = function createCache() {
@@ -1336,51 +1569,172 @@ self.uland = (function (exports) {
     };
   };
 
-  var unroll$1 = function unroll(info, _ref) {
-    var f = _ref.f,
-        c = _ref.c,
-        a = _ref.a;
-    var e = info.e;
+  var unroll$1 = /*#__PURE__*/function () {
+    var _ref7 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee6(info, _ref6) {
+      var f, c, a, e;
+      return regeneratorRuntime.wrap(function _callee6$(_context6) {
+        while (1) {
+          switch (_context6.prev = _context6.next) {
+            case 0:
+              f = _ref6.f, c = _ref6.c, a = _ref6.a;
+              e = info.e;
 
-    if (!e || e.f !== f) {
-      info.e = e = {
-        f: f,
-        h: null,
-        $: null
-      };
-      e.h = createHook(createCache$1(), e);
-    }
+              if (!e || e.f !== f) {
+                info.e = e = {
+                  f: f,
+                  h: null,
+                  $: null
+                };
+                e.h = createHook(createCache$1(), e);
+              }
 
-    return e.h.apply(c, a);
-  };
+              return _context6.abrupt("return", e.h.apply(c, a));
 
-  var unrollHole = function unrollHole(info, _ref2) {
-    var values = _ref2.values;
-    unrollValues$1(info, values, values.length);
-  };
+            case 4:
+            case "end":
+              return _context6.stop();
+          }
+        }
+      }, _callee6);
+    }));
 
-  var unrollValues$1 = function unrollValues(info, values, length) {
-    var s = info.s;
+    return function unroll(_x5, _x6) {
+      return _ref7.apply(this, arguments);
+    };
+  }();
 
-    for (var i = 0; i < length; i++) {
-      var hook = values[i];
-      if (hook instanceof Hook) values[i] = unroll$1(s[i] || (s[i] = createCache$1()), hook);else if (hook instanceof Hole) unrollHole(s[i] || (s[i] = createCache$1()), hook);else if (isArray(hook)) unrollValues(s[i] || (s[i] = createCache$1()), hook, hook.length);else s[i] = null;
-    }
+  var unrollHole = /*#__PURE__*/function () {
+    var _ref9 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee7(info, _ref8) {
+      var values;
+      return regeneratorRuntime.wrap(function _callee7$(_context7) {
+        while (1) {
+          switch (_context7.prev = _context7.next) {
+            case 0:
+              values = _ref8.values;
+              _context7.next = 3;
+              return unrollValues$1(info, values, values.length);
 
-    if (length < s.length) s.splice(length);
-  };
+            case 3:
+            case "end":
+              return _context7.stop();
+          }
+        }
+      }, _callee7);
+    }));
 
-  var view = function view(e, _ref3) {
-    var type = _ref3.type,
-        template = _ref3.template,
-        values = _ref3.values;
+    return function unrollHole(_x7, _x8) {
+      return _ref9.apply(this, arguments);
+    };
+  }();
+
+  var unrollValues$1 = /*#__PURE__*/function () {
+    var _ref10 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee8(info, values, length) {
+      var s, i, hook;
+      return regeneratorRuntime.wrap(function _callee8$(_context8) {
+        while (1) {
+          switch (_context8.prev = _context8.next) {
+            case 0:
+              s = info.s;
+              i = 0;
+
+            case 2:
+              if (!(i < length)) {
+                _context8.next = 26;
+                break;
+              }
+
+              _context8.next = 5;
+              return values[i];
+
+            case 5:
+              hook = _context8.sent;
+
+              if (!(hook instanceof Hook)) {
+                _context8.next = 12;
+                break;
+              }
+
+              _context8.next = 9;
+              return unroll$1(s[i] || (s[i] = createCache$1()), hook);
+
+            case 9:
+              values[i] = _context8.sent;
+              _context8.next = 23;
+              break;
+
+            case 12:
+              if (!(hook instanceof Hole)) {
+                _context8.next = 17;
+                break;
+              }
+
+              _context8.next = 15;
+              return unrollHole(s[i] || (s[i] = createCache$1()), hook);
+
+            case 15:
+              _context8.next = 23;
+              break;
+
+            case 17:
+              if (!isArray(hook)) {
+                _context8.next = 22;
+                break;
+              }
+
+              _context8.next = 20;
+              return unrollValues$1(s[i] || (s[i] = createCache$1()), hook, hook.length);
+
+            case 20:
+              _context8.next = 23;
+              break;
+
+            case 22:
+              s[i] = null;
+
+            case 23:
+              i++;
+              _context8.next = 2;
+              break;
+
+            case 26:
+              if (length < s.length) s.splice(length);
+
+            case 27:
+            case "end":
+              return _context8.stop();
+          }
+        }
+      }, _callee8);
+    }));
+
+    return function unrollValues(_x9, _x10, _x11) {
+      return _ref10.apply(this, arguments);
+    };
+  }();
+
+  var view = function view(e, _ref11) {
+    var type = _ref11.type,
+        template = _ref11.template,
+        values = _ref11.values;
     return (type === 'svg' ? svg : html)["for"](e, type).apply(void 0, [template].concat(_toConsumableArray(values)));
   };
 
   function Component(f) {
-    return function () {
-      return new Hook(f, this, arguments);
-    };
+    return /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee9() {
+      var _args9 = arguments;
+      return regeneratorRuntime.wrap(function _callee9$(_context9) {
+        while (1) {
+          switch (_context9.prev = _context9.next) {
+            case 0:
+              return _context9.abrupt("return", new Hook(f, this, _args9));
+
+            case 1:
+            case "end":
+              return _context9.stop();
+          }
+        }
+      }, _callee9, this);
+    }));
   }
 
   function Hook(f, c, a) {
@@ -1394,14 +1748,44 @@ self.uland = (function (exports) {
     return function (e, id) {
       var store = cache.get(e) || cache.set(e, create$1(null));
       var info = store[id] || (store[id] = createCache$1());
-      return function (template) {
-        for (var _len3 = arguments.length, values = new Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {
-          values[_key3 - 1] = arguments[_key3];
-        }
+      return /*#__PURE__*/function () {
+        var _ref13 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee10(template) {
+          var _len3,
+              values,
+              _key3,
+              _args10 = arguments;
 
-        unrollValues$1(info, values);
-        return uhtml["for"](e, id).apply(void 0, [template].concat(values));
-      };
+          return regeneratorRuntime.wrap(function _callee10$(_context10) {
+            while (1) {
+              switch (_context10.prev = _context10.next) {
+                case 0:
+                  for (_len3 = _args10.length, values = new Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {
+                    values[_key3 - 1] = _args10[_key3];
+                  }
+
+                  _context10.next = 3;
+                  return all(values);
+
+                case 3:
+                  values = _context10.sent;
+                  _context10.next = 6;
+                  return unrollValues$1(info, values);
+
+                case 6:
+                  return _context10.abrupt("return", uhtml["for"](e, id).apply(void 0, [template].concat(_toConsumableArray(values))));
+
+                case 7:
+                case "end":
+                  return _context10.stop();
+              }
+            }
+          }, _callee10);
+        }));
+
+        return function (_x12) {
+          return _ref13.apply(this, arguments);
+        };
+      }();
     };
   }
 
