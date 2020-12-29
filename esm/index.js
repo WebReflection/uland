@@ -24,7 +24,7 @@ const render = (where, what) => (
     c: createCache(),
     h: hooked(
       /*async*/ function (what) {
-        const value = /*await*/ typeof what === 'function' ? what() : what;
+        const value = /*await*/ (typeof what === 'function' ? what() : what);
         return $render(
           where,
           value instanceof Hook ?
