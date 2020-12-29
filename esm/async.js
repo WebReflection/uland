@@ -1,14 +1,13 @@
-'use strict';
-const {hooked} = require('uhooks-dom');
-const umap = (m => m.__esModule ? /* istanbul ignore next */ m.default : /* istanbul ignore next */ m)(require('umap'));
-const {isArray} = require('uarray');
+import {hooked} from 'uhooks-dom/async';
+import umap from 'umap';
+import {isArray} from 'uarray';
 
-const {
+import {
   Hole,
-  html: $html,
-  svg: $svg,
-  render: $render
-} = require('uhtml');
+  html as $html,
+  svg as $svg,
+  render as $render
+} from 'uhtml';
 
 const {create} = Object;
 
@@ -24,13 +23,13 @@ const render = (where, what) => (
   cache.get(where) || cache.set(where, {
     c: createCache(),
     h: hooked(
-      /*async*/ function (what) {
-        const value = /*await*/ typeof what === 'function' ? what() : what;
+      async function (what) {
+        const value = await typeof what === 'function' ? what() : what;
         return $render(
           where,
           value instanceof Hook ?
-            /*await*/ unroll(this.c, value) :
-            (/*await*/ unrollHole(this.c, value), value)
+            await unroll(this.c, value) :
+            (await unrollHole(this.c, value), value)
         );
       },
       where
@@ -38,27 +37,19 @@ const render = (where, what) => (
   })
 ).h(what);
 
-exports.Component = Component;
-exports.render = render;
-exports.html = html;
-exports.svg = svg;
+export {Component, render, html, svg};
 
-(m => {
-  exports.createContext = m.createContext;
-  exports.useContext = m.useContext;
-  exports.useCallback = m.useCallback;
-  exports.useMemo = m.useMemo;
-  exports.useEffect = m.useEffect;
-  exports.useLayoutEffect = m.useLayoutEffect;
-  exports.useReducer = m.useReducer;
-  exports.useState = m.useState;
-  exports.useRef = m.useRef;
-})(require('uhooks-dom'));
+export {
+  createContext, useContext,
+  useCallback, useMemo,
+  useEffect, useLayoutEffect,
+  useReducer, useState, useRef
+} from 'uhooks-dom/async';
 
-const createHook = (info, entry) => hooked(/*async*/ function () {
-  const hole = /*await*/ entry.f.apply(this, arguments);
+const createHook = (info, entry) => hooked(async function () {
+  const hole = await entry.f.apply(this, arguments);
   if (hole instanceof Hole) {
-    /*await*/ unrollHole(info, hole);
+    await unrollHole(info, hole);
     entry.$ = view(entry, hole);
   }
   else
@@ -77,20 +68,20 @@ const unroll = (info, {f, c, a}) => {
   return e.h.apply(c, a);
 };
 
-const unrollHole = /*async*/ (info, {values}) => {
-  /*await*/ unrollValues(info, values, values.length);
+const unrollHole = async (info, {values}) => {
+  await unrollValues(info, values, values.length);
 };
 
-const unrollValues = /*async*/ (info, values, length) => {
+const unrollValues = async (info, values, length) => {
   const {s} = info;
   for (let i = 0; i < length; i++) {
     const hook = values[i];
     if (hook instanceof Hook)
-      values[i] = /*await*/ unroll(s[i] || (s[i] = createCache()), hook);
+      values[i] = await unroll(s[i] || (s[i] = createCache()), hook);
     else if (hook instanceof Hole)
-      /*await*/ unrollHole(s[i] || (s[i] = createCache()), hook);
+      await unrollHole(s[i] || (s[i] = createCache()), hook);
     else if (isArray(hook))
-      /*await*/ unrollValues(s[i] || (s[i] = createCache()), hook, hook.length);
+      await unrollValues(s[i] || (s[i] = createCache()), hook, hook.length);
     else
       s[i] = null;
   }
@@ -120,8 +111,8 @@ function createFor(uhtml) {
     (e, id) => {
       const store = cache.get(e) || cache.set(e, create(null));
       const info = store[id] || (store[id] = createCache());
-      return /*async*/ (template, ...values) => {
-        /*await*/ unrollValues(info, values);
+      return async (template, ...values) => {
+        await unrollValues(info, values);
         return uhtml.for(e, id)(template, ...values);
       };
     }

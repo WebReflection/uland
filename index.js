@@ -395,7 +395,9 @@ self.uland = (function (exports) {
   };
 
   var hooked$1 = function hooked$1(callback, outer) {
-    return hooked(outer ? function hook() {
+    return hooked(outer ?
+    /*async*/
+    function hook() {
       var ph = h$1,
           pc = c,
           pa = a;
@@ -404,7 +406,10 @@ self.uland = (function (exports) {
       a = arguments;
 
       try {
-        return callback.apply(c, a);
+        return (
+          /*await*/
+          callback.apply(c, a)
+        );
       } finally {
         h$1 = ph;
         c = pc;
@@ -439,21 +444,26 @@ self.uland = (function (exports) {
 
   var hooked$2 = function hooked(fn, outer) {
     var hook = hooked$1(fn, outer);
-    return function () {
-      var node = hook.apply(this, arguments);
+    return (
+      /*async*/
+      function () {
+        var node =
+        /*await*/
+        hook.apply(this, arguments);
 
-      if (hasEffect(hook)) {
-        var element = get(node);
-        if (!observer) observer = observe(element.ownerDocument, 'children', CustomEvent$1);
-        if (!observer.has(element)) observer.connect(element, {
-          disconnected: function disconnected() {
-            dropEffect(hook);
-          }
-        });
+        if (hasEffect(hook)) {
+          var element = get(node);
+          if (!observer) observer = observe(element.ownerDocument, 'children', CustomEvent$1);
+          if (!observer.has(element)) observer.connect(element, {
+            disconnected: function disconnected() {
+              dropEffect(hook);
+            }
+          });
+        }
+
+        return node;
       }
-
-      return node;
-    };
+    );
   };
 
   var umap = (function (_) {
@@ -1309,18 +1319,31 @@ self.uland = (function (exports) {
   var render$1 = function render$1(where, what) {
     return (cache$2.get(where) || cache$2.set(where, {
       c: createCache$1(),
-      h: hooked$2(function (what) {
-        var value = typeof what === 'function' ? what() : what;
-        return render(where, value instanceof Hook ? unroll$1(this.c, value) : (unrollHole(this.c, value), value));
+      h: hooked$2(
+      /*async*/
+      function (what) {
+        var value =
+        /*await*/
+        typeof what === 'function' ? what() : what;
+        return render(where, value instanceof Hook ?
+        /*await*/
+        unroll$1(this.c, value) : (
+        /*await*/
+        unrollHole(this.c, value), value));
       }, where)
     })).h(what);
   };
 
   var createHook = function createHook(info, entry) {
-    return hooked$2(function () {
-      var hole = entry.f.apply(this, arguments);
+    return hooked$2(
+    /*async*/
+    function () {
+      var hole =
+      /*await*/
+      entry.f.apply(this, arguments);
 
       if (hole instanceof Hole) {
+        /*await*/
         unrollHole(info, hole);
         entry.$ = view(entry, hole);
       } else entry.$ = hole;
@@ -1354,17 +1377,29 @@ self.uland = (function (exports) {
     return e.h.apply(c, a);
   };
 
-  var unrollHole = function unrollHole(info, _ref2) {
+  var unrollHole =
+  /*async*/
+  function unrollHole(info, _ref2) {
     var values = _ref2.values;
+
+    /*await*/
     unrollValues$1(info, values, values.length);
   };
 
-  var unrollValues$1 = function unrollValues(info, values, length) {
+  var unrollValues$1 =
+  /*async*/
+  function unrollValues(info, values, length) {
     var s = info.s;
 
     for (var i = 0; i < length; i++) {
       var hook = values[i];
-      if (hook instanceof Hook) values[i] = unroll$1(s[i] || (s[i] = createCache$1()), hook);else if (hook instanceof Hole) unrollHole(s[i] || (s[i] = createCache$1()), hook);else if (isArray(hook)) unrollValues(s[i] || (s[i] = createCache$1()), hook, hook.length);else s[i] = null;
+      if (hook instanceof Hook) values[i] =
+      /*await*/
+      unroll$1(s[i] || (s[i] = createCache$1()), hook);else if (hook instanceof Hole)
+        /*await*/
+        unrollHole(s[i] || (s[i] = createCache$1()), hook);else if (isArray(hook))
+        /*await*/
+        unrollValues(s[i] || (s[i] = createCache$1()), hook, hook.length);else s[i] = null;
     }
 
     if (length < s.length) s.splice(length);
@@ -1394,14 +1429,18 @@ self.uland = (function (exports) {
     return function (e, id) {
       var store = cache.get(e) || cache.set(e, create$1(null));
       var info = store[id] || (store[id] = createCache$1());
-      return function (template) {
-        for (var _len3 = arguments.length, values = new Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {
-          values[_key3 - 1] = arguments[_key3];
-        }
+      return (
+        /*async*/
+        function (template) {
+          for (var _len3 = arguments.length, values = new Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {
+            values[_key3 - 1] = arguments[_key3];
+          }
 
-        unrollValues$1(info, values);
-        return uhtml["for"](e, id).apply(void 0, [template].concat(values));
-      };
+          /*await*/
+          unrollValues$1(info, values);
+          return uhtml["for"](e, id).apply(void 0, [template].concat(values));
+        }
+      );
     };
   }
 

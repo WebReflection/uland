@@ -15,6 +15,9 @@ Please ask questions in the [dedicated forum](https://webreflection.boards.net/)
 
 Same API, except the exports are `{Component, render, html, svg}`, where `Component` is a function you can use either as `new Component(...)` or just `Component(...)` which is the equivalent of _neverland_ default export.
 
+This module exports same utilities via `uland/async`, which is based on `uhooks-dom/async` for asynchronous hooks.
+
+
 ### Announcement
 
 Are you looking for something even more similar to *React*? Then don't miss [🐪 kaboobie](https://github.com/WebReflection/kaboobie/#readme) out!
