@@ -84,7 +84,7 @@ const unrollHole = /*async*/ (info, {values}) => {
 const unrollValues = /*async*/ (info, values, length) => {
   const {s} = info;
   for (let i = 0; i < length; i++) {
-    const hook = values[i];
+    const hook = /*await*/ values[i];
     if (hook instanceof Hook)
       values[i] = /*await*/ unroll(s[i] || (s[i] = createCache()), hook);
     else if (hook instanceof Hole)

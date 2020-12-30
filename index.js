@@ -1392,7 +1392,9 @@ self.uland = (function (exports) {
     var s = info.s;
 
     for (var i = 0; i < length; i++) {
-      var hook = values[i];
+      var hook =
+      /*await*/
+      values[i];
       if (hook instanceof Hook) values[i] =
       /*await*/
       unroll$1(s[i] || (s[i] = createCache$1()), hook);else if (hook instanceof Hole)
