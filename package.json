@@ -50,8 +50,8 @@
   "unpkg": "min.js",
   "dependencies": {
     "uarray": "^1.0.0",
-    "uhooks-dom": "^0.2.0",
-    "uhtml": "^2.1.4",
+    "uhooks-dom": "^0.2.1",
+    "uhtml": "^2.2.0",
     "umap": "^1.0.2"
   },
   "repository": {
