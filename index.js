@@ -1007,7 +1007,9 @@ self.uland = (function (exports) {
   // content, within the exact same amount of updates each time.
   // This cache relates each template to its unique content and updates.
 
-  var cache = umap(new WeakMap());
+  var cache = umap(new WeakMap()); // a RegExp that helps checking nodes that cannot contain comments
+
+  var textOnly = /^(?:plaintext|script|style|textarea|title|xmp)$/i;
   var createCache = function createCache() {
     return {
       stack: [],
@@ -1090,11 +1092,11 @@ self.uland = (function (exports) {
           });
           node.removeAttribute(search);
           search = "".concat(prefix).concat(++i);
-        } // if the node was a style or a textarea one, check its content
+        } // if the node was a style, textarea, or others, check its content
         // and if it is <!--isµX--> then update tex-only this node
 
 
-        if (/^(?:style|textarea)$/i.test(node.tagName) && node.textContent.trim() === "<!--".concat(search, "-->")) {
+        if (textOnly.test(node.tagName) && node.textContent.trim() === "<!--".concat(search, "-->")) {
           node.textContent = '';
           nodes.push({
             type: 'text',
@@ -1458,8 +1460,6 @@ self.uland = (function (exports) {
   exports.useReducer = useReducer$1;
   exports.useRef = useRef;
   exports.useState = useState$1;
-
-  Object.defineProperty(exports, '__esModule', { value: true });
 
   return exports;
 

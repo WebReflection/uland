@@ -1,4 +1,4 @@
-import resolve from 'rollup-plugin-node-resolve';
+import {nodeResolve} from '@rollup/plugin-node-resolve';
 import babel from 'rollup-plugin-babel';
 import includePaths from 'rollup-plugin-includepaths';
 export default {
@@ -7,12 +7,13 @@ export default {
     includePaths({
       include: {},
     }),
-    resolve({module: true}),
+    nodeResolve(),
     babel({presets: ['@babel/preset-env']})
   ],
   context: 'null',
   moduleContext: 'null',
   output: {
+    esModule: false,
     exports: 'named',
     file: './index.js',
     format: 'iife',
