@@ -25,7 +25,7 @@
     "@babel/core": "^7.12.10",
     "@babel/preset-env": "^7.12.11",
     "@rollup/plugin-node-resolve": "^11.0.1",
-    "@ungap/degap": "^0.2.2",
+    "@ungap/degap": "^0.2.3",
     "ascjs": "^4.0.3",
     "drop-babel-typeof": "^1.0.3",
     "rollup": "^2.36.1",
@@ -51,7 +51,7 @@
   "dependencies": {
     "uarray": "^1.0.0",
     "uhooks-dom": "^0.2.3",
-    "uhtml": "^2.3.0",
+    "uhtml": "^2.3.1",
     "umap": "^1.0.2"
   },
   "repository": {
