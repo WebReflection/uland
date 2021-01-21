@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script type="module">
+  import {Component, render, html, useRef, useLayoutEffect} from '../esm/index.js';
+
+  const Test = Component(() => {
+    const span = useRef();
+    useLayoutEffect(() => {
+      span.current.textContent = 'World';
+    }, []);
+    return html`
+      <div>
+        Hello
+        <span ref=${span} />
+        !
+      </div>
+    `;
+  });
+
+  render(document.body, Test());
+  </script>
+</head>
+</html>

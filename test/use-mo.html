@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script type="module">
+  import {Component, render, html, useMemo, useRef, useLayoutEffect} from '../esm/index.js';
+
+  const useUpdatedRef = value => {
+    const ref = useRef(value);
+    ref.current = value;
+    return ref;
+  };
+
+  const useMO = (options) => {
+    const fn = useUpdatedRef(options.changes);
+    const ref = useRef(null);
+    const mo = useMemo(
+      () => new MutationObserver(
+        records => { fn.current(records); }
+      ),
+      []
+    );
+    useLayoutEffect(
+      () => {
+        mo.observe(ref.current, options);
+        return () => {
+          console.log('done');
+          mo.disconnect();
+        };
+      },
+      []
+    );
+    return ref;
+  };
+
+  const Test = Component(() => {
+    const ref = useMO({
+      childList: true,
+      subtree: true,
+      changes(records) {
+        console.log(records);
+      }
+    });
+    return html`
+      <div ref=${ref}>
+        <p>Hello</p>
+        <p>World</p>
+      </div>
+    `;
+  });
+
+  render(document.body, Test());
+  </script>
+</head>
+</html>
