@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <script type="module">
+  // bootstrap registry and libraries
+  import registry from './registry.mjs';
+  import * as uland from 'https://cdn.skypack.dev/uland';
+  registry.set('@uland', uland);
+  </script>
+
+  <!-- it is important this is a separate script/file -->
+  <script type="module">
+  import {render, html} from 'https://cdn.skypack.dev/uland';
+  import Counter from './counter.mjs';
+
+  render(document.body, () => html`
+    <div>
+      A bounce of counters.<hr>
+      ${Counter(0)} ${Counter(1)}
+    </div>
+  `);
+  </script>
+</head>
+</html>

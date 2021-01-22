@@ -1,1 +1,6 @@
-{"type":"commonjs"}
+{
+  "type": "commonjs",
+  "dependencies": {
+    "uland-ssr": "^0.2.2"
+  }
+}
