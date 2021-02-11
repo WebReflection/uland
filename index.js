@@ -742,6 +742,12 @@ self.uland = (function (exports) {
       }
     };
   };
+
+  var _boolean = function _boolean(node, key) {
+    return function (value) {
+      if (value) node.setAttribute(key, '');else node.removeAttribute(key);
+    };
+  };
   var data = function data(_ref) {
     var dataset = _ref.dataset;
     return function (values) {
@@ -770,7 +776,7 @@ self.uland = (function (exports) {
     };
   };
   var setter = function setter(node, key) {
-    return function (value) {
+    return key === 'dataset' ? data(node) : function (value) {
       node[key] = value;
     };
   };
@@ -972,11 +978,25 @@ self.uland = (function (exports) {
   var handleAttribute = function handleAttribute(node, name
   /*, svg*/
   ) {
-    if (name === 'ref') return ref(node);
-    if (name === 'aria') return aria(node);
-    if (name === '.dataset') return data(node);
-    if (name.slice(0, 1) === '.') return setter(node, name.slice(1));
-    if (name.slice(0, 2) === 'on') return event(node, name);
+    switch (name[0]) {
+      case '?':
+        return _boolean(node, name.slice(1));
+
+      case '.':
+        return setter(node, name.slice(1));
+
+      case 'o':
+        if (name[1] === 'n') return event(node, name);
+    }
+
+    switch (name) {
+      case 'ref':
+        return ref(node);
+
+      case 'aria':
+        return aria(node);
+    }
+
     return attribute(node, name
     /*, svg*/
     );
