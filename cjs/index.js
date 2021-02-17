@@ -1,6 +1,6 @@
 'use strict';
 const {hooked} = require('uhooks-dom');
-const umap = (m => m.__esModule ? /* c8 ignore next */ m.default : /* c8 ignore next */ m)(require('umap'));
+const umap = (m => /* c8 ignore start */ m.__esModule ? m.default : m /* c8 ignore stop */)(require('umap'));
 const {isArray} = require('uarray');
 
 const {
