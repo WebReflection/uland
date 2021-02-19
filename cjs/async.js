@@ -78,11 +78,11 @@ const unroll = (info, {f, c, a}) => {
 };
 
 const unrollHole = async (info, {values}) => {
-  await unrollValues(info, values, values.length);
+  await unrollValues(info, values);
 };
 
-const unrollValues = async (info, values, length) => {
-  const {s} = info;
+const unrollValues = async (info, values) => {
+  const {s} = info, {length} = values;
   for (let i = 0; i < length; i++) {
     const hook = await values[i];
     if (hook instanceof Hook)
@@ -90,7 +90,7 @@ const unrollValues = async (info, values, length) => {
     else if (hook instanceof Hole)
       await unrollHole(s[i] || (s[i] = createCache()), hook);
     else if (isArray(hook))
-      await unrollValues(s[i] || (s[i] = createCache()), hook, hook.length);
+      await unrollValues(s[i] || (s[i] = createCache()), hook);
     else
       s[i] = null;
   }

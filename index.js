@@ -488,13 +488,13 @@ self.uland = (function (exports) {
 
   var attr = /([^\s\\>"'=]+)\s*=\s*(['"]?)$/;
   var empty = /^(?:area|base|br|col|embed|hr|img|input|keygen|link|menuitem|meta|param|source|track|wbr)$/i;
-  var node$1 = /<[a-z][^>]+$/i;
+  var node = /<[a-z][^>]+$/i;
   var notNode = />[^<>]*$/;
   var selfClosing = /<([a-z]+[a-z0-9:._-]*)([^>]*?)(\/>)/ig;
   var trimEnd = /\s+$/;
 
   var isNode = function isNode(template, i) {
-    return 0 < i-- && (node$1.test(template[i]) || !notNode.test(template[i]) && isNode(template, i));
+    return 0 < i-- && (node.test(template[i]) || !notNode.test(template[i]) && isNode(template, i));
   };
 
   var regular = function regular(original, name, extra) {
@@ -927,14 +927,11 @@ self.uland = (function (exports) {
         case 'boolean':
           if (oldValue !== newValue) {
             oldValue = newValue;
-            if (text) text.nodeValue = newValue;else text = document.createTextNode(newValue);
+            if (!text) text = document.createTextNode('');
+            text.nodeValue = newValue;
             nodes = diff(comment, nodes, [text]);
           }
 
-          break;
-
-        case 'function':
-          anyContent(newValue(node));
           break;
         // null, and undefined are used to cleanup previous content
 
@@ -969,6 +966,11 @@ self.uland = (function (exports) {
             nodes = diff(comment, nodes, newValue.nodeType === 11 ? slice.call(newValue.childNodes) : [newValue]);
           }
 
+          break;
+
+        case 'function':
+          anyContent(newValue(comment));
+          break;
       }
     };
 
@@ -1413,13 +1415,14 @@ self.uland = (function (exports) {
     var values = _ref2.values;
 
     /*await*/
-    unrollValues$1(info, values, values.length);
+    unrollValues$1(info, values);
   };
 
   var unrollValues$1 =
   /*async*/
-  function unrollValues(info, values, length) {
-    var s = info.s;
+  function unrollValues(info, values) {
+    var s = info.s,
+        length = values.length;
 
     for (var i = 0; i < length; i++) {
       var hook =
@@ -1431,7 +1434,7 @@ self.uland = (function (exports) {
         /*await*/
         unrollHole(s[i] || (s[i] = createCache$1()), hook);else if (isArray(hook))
         /*await*/
-        unrollValues(s[i] || (s[i] = createCache$1()), hook, hook.length);else s[i] = null;
+        unrollValues(s[i] || (s[i] = createCache$1()), hook);else s[i] = null;
     }
 
     if (length < s.length) s.splice(length);

@@ -22,8 +22,8 @@
   "author": "Andrea Giammarchi",
   "license": "ISC",
   "devDependencies": {
-    "@babel/core": "^7.12.16",
-    "@babel/preset-env": "^7.12.16",
+    "@babel/core": "^7.12.17",
+    "@babel/preset-env": "^7.12.17",
     "@rollup/plugin-node-resolve": "^11.2.0",
     "@ungap/degap": "^0.2.3",
     "ascjs": "^5.0.1",
@@ -51,7 +51,7 @@
   "dependencies": {
     "uarray": "^1.0.0",
     "uhooks-dom": "^0.2.4",
-    "uhtml": "^2.5.0",
+    "uhtml": "^2.5.3",
     "umap": "^1.0.2"
   },
   "repository": {

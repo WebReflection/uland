@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script type="module">
+  import {render, html, Component} from '../esm/index.js';
+  const Name = Component((name) => html`<span>${name}</span>`);
+
+  const ref = document.body;
+  const items = [
+    {id: 1, name: 'Article X'},
+    {id: 2, name: 'Article Y'},
+    {id: 3, name: 'Article Z'},
+  ];
+
+  const update = (items) => {
+    render(ref, html`
+      <ul>
+        ${items.map(
+          ({id, name}) =>
+            html.for(ref, id)`<li data-id=${id}>${Name(name)}</li>`
+        )}
+      </ul>`
+    );
+  };
+
+  update(items);
+
+  setInterval(
+    (randomly) => {
+      items.sort(randomly);
+      update(items);
+    },
+    100,
+    () => Math.random() - Math.random()
+  );
+  </script>
+</head>
+<body>
+</body>
+</html>
