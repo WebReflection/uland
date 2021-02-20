@@ -1,5 +1,7 @@
 # 🦄 <em>µ</em>land
 
+[![CSP strict](https://webreflection.github.io/csp/strict.svg)](https://webreflection.github.io/csp/#-csp-strict)
+
 ![tiny island](./uland-head.jpg)
 
 <sup>**Social Media Photo by [Ben Klea](https://unsplash.com/@benkleaphoto) on [Unsplash](https://unsplash.com/)**</sup>
