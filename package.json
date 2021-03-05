@@ -3,7 +3,7 @@
   "version": "0.8.3",
   "main": "./cjs/index.js",
   "scripts": {
-    "build": "npm run async && npm run cjs && npm run rollup:async && npm run rollup:es && npm run rollup:babel && npm run min && npm run test && npm run size",
+    "build": "npm run async && npm run cjs && npm run rollup:async && npm run rollup:es && npm run rollup:babel && npm run min && npm run size",
     "cjs": "ascjs --no-default esm cjs",
     "async": "cp esm/index.js esm/async.js && sed -i.bck 's/uhooks-dom/uhooks-dom\\/async/; s/\\/\\*async\\*\\//async/; s/\\/\\*await\\*\\//await/' esm/async.js && rm -rf  esm/async.js.bck",
     "rollup:async": "rollup --config rollup/async.config.js && sed -i.bck 's/^var /self./' async.js && rm -rf async.js.bck",
@@ -22,13 +22,13 @@
   "author": "Andrea Giammarchi",
   "license": "ISC",
   "devDependencies": {
-    "@babel/core": "^7.12.17",
-    "@babel/preset-env": "^7.12.17",
+    "@babel/core": "^7.13.8",
+    "@babel/preset-env": "^7.13.9",
     "@rollup/plugin-node-resolve": "^11.2.0",
-    "@ungap/degap": "^0.2.4",
+    "@ungap/degap": "^0.2.5",
     "ascjs": "^5.0.1",
     "drop-babel-typeof": "^1.0.3",
-    "rollup": "^2.39.0",
+    "rollup": "^2.40.0",
     "rollup-plugin-babel": "^4.4.0",
     "rollup-plugin-includepaths": "^0.2.4",
     "rollup-plugin-terser": "^7.0.2",
@@ -51,7 +51,7 @@
   "dependencies": {
     "uarray": "^1.0.0",
     "uhooks-dom": "^0.2.5",
-    "uhtml": "^2.5.4",
+    "uhtml": "^2.6.0",
     "umap": "^1.0.2"
   },
   "repository": {

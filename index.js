@@ -171,11 +171,11 @@ self.uland = (function (exports) {
         h = effect.h;
 
     if (isFunction(r)) {
-      fx.get(h)["delete"](effect);
+      fx$1.get(h)["delete"](effect);
       r();
     }
 
-    if (isFunction(effect.r = $())) fx.get(h).add(effect);
+    if (isFunction(effect.r = $())) fx$1.get(h).add(effect);
   };
 
   var runSchedule = function runSchedule() {
@@ -192,14 +192,14 @@ self.uland = (function (exports) {
     });
   };
 
-  var fx = new WeakMap();
+  var fx$1 = new WeakMap();
   var effects = [];
   var layoutEffects = [];
   function different(value, i) {
     return value !== this[i];
   }
   var dropEffect = function dropEffect(hook) {
-    var effects = fx.get(hook);
+    var effects = fx$1.get(hook);
     if (effects) wait.then(function () {
       effects.forEach(function (effect) {
         effect.r();
@@ -212,12 +212,12 @@ self.uland = (function (exports) {
     return info;
   };
   var hasEffect = function hasEffect(hook) {
-    return fx.has(hook);
+    return fx$1.has(hook);
   };
   var isFunction = function isFunction(f) {
     return typeof f === 'function';
   };
-  var hooked = function hooked(callback) {
+  var hooked$2 = function hooked(callback) {
     var current = {
       h: hook,
       c: null,
@@ -312,7 +312,7 @@ self.uland = (function (exports) {
       info.i++;
 
       if (call) {
-        if (!fx.has(h)) fx.set(h, new Set());
+        if (!fx$1.has(h)) fx$1.set(h, new Set());
         s[i] = {
           $: callback,
           _: guards,
@@ -334,7 +334,7 @@ self.uland = (function (exports) {
     return isFunction(f) ? f(value) : f;
   };
 
-  var useReducer = function useReducer(reducer, value, init) {
+  var useReducer$1 = function useReducer(reducer, value, init) {
     var info = getInfo();
     var i = info.i,
         s = info.s;
@@ -350,8 +350,8 @@ self.uland = (function (exports) {
         set = _s$info$i.set;
     return [$, set];
   };
-  var useState = function useState(value) {
-    return useReducer(getValue, value);
+  var useState$1 = function useState(value) {
+    return useReducer$1(getValue, value);
   };
 
   var useRef = function useRef(current) {
@@ -368,15 +368,15 @@ self.uland = (function (exports) {
   var h = null,
       c = null,
       a = null;
-  var fx$1 = new WeakMap();
+  var fx = new WeakMap();
   var states = new WeakMap();
 
   var set = function set(h, c, a, update) {
     var wrap = function wrap(value) {
-      if (!fx$1.has(h)) {
-        fx$1.set(h, 0);
+      if (!fx.has(h)) {
+        fx.set(h, 0);
         wait.then(function () {
-          fx$1["delete"](h);
+          fx["delete"](h);
           h.apply(c, a);
         });
       }
@@ -392,8 +392,8 @@ self.uland = (function (exports) {
     return h ? [state[0], states.get(state[1]) || set(h, c, a, state[1])] : state;
   };
 
-  var hooked$1 = function hooked$1(callback, outer) {
-    var hook = hooked(outer ?
+  var hooked$1 = function hooked(callback, outer) {
+    var hook = hooked$2(outer ?
     /*async*/
     function () {
       var ph = h,
@@ -416,11 +416,11 @@ self.uland = (function (exports) {
     } : callback);
     return hook;
   };
-  var useReducer$1 = function useReducer$1(reducer, value, init) {
-    return wrap(h, c, a, useReducer(reducer, value, init));
+  var useReducer = function useReducer(reducer, value, init) {
+    return wrap(h, c, a, useReducer$1(reducer, value, init));
   };
-  var useState$1 = function useState$1(value) {
-    return wrap(h, c, a, useState(value));
+  var useState = function useState(value) {
+    return wrap(h, c, a, useState$1(value));
   };
 
   /*! (c) Andrea Giammarchi - ISC */
@@ -441,7 +441,7 @@ self.uland = (function (exports) {
     }
   };
 
-  var hooked$2 = function hooked(fn, outer) {
+  var hooked = function hooked(fn, outer) {
     var hook = hooked$1(fn, outer);
     return (
       /*async*/
@@ -775,8 +775,12 @@ self.uland = (function (exports) {
     };
   };
   var ref = function ref(node) {
+    var oldValue;
     return function (value) {
-      if (typeof value === 'function') value(node);else value.current = node;
+      if (oldValue !== value) {
+        oldValue = value;
+        if (typeof value === 'function') value(node);else value.current = node;
+      }
     };
   };
   var setter = function setter(node, key) {
@@ -1038,10 +1042,10 @@ self.uland = (function (exports) {
   // content, within the exact same amount of updates each time.
   // This cache relates each template to its unique content and updates.
 
-  var cache = umap(new WeakMap()); // a RegExp that helps checking nodes that cannot contain comments
+  var cache$2 = umap(new WeakMap()); // a RegExp that helps checking nodes that cannot contain comments
 
   var textOnly = /^(?:plaintext|script|style|textarea|title|xmp)$/i;
-  var createCache = function createCache() {
+  var createCache$1 = function createCache() {
     return {
       stack: [],
       // each template gets a stack for each interpolation "hole"
@@ -1151,7 +1155,7 @@ self.uland = (function (exports) {
 
 
   var mapUpdates = function mapUpdates(type, template) {
-    var _ref = cache.get(template) || cache.set(template, mapTemplate(type, template)),
+    var _ref = cache$2.get(template) || cache$2.set(template, mapTemplate(type, template)),
         content = _ref.content,
         nodes = _ref.nodes; // clone deeply the fragment
 
@@ -1170,14 +1174,14 @@ self.uland = (function (exports) {
   // into an update operation.
 
 
-  var unroll = function unroll(info, _ref2) {
+  var unroll$1 = function unroll(info, _ref2) {
     var type = _ref2.type,
         template = _ref2.template,
         values = _ref2.values;
     var length = values.length; // interpolations can contain holes and arrays, so these need
     // to be recursively discovered
 
-    unrollValues(info, values, length);
+    unrollValues$1(info, values, length);
     var entry = info.entry; // if the cache entry is either null or different from the template
     // and the type this unroll should resolve, create a new entry
     // assigning a new content fragment and the list of updates.
@@ -1202,16 +1206,16 @@ self.uland = (function (exports) {
   // related to each interpolation value, or null, if the render
   // was conditional and the value is not special (Array or Hole)
 
-  var unrollValues = function unrollValues(_ref3, values, length) {
+  var unrollValues$1 = function unrollValues(_ref3, values, length) {
     var stack = _ref3.stack;
 
     for (var i = 0; i < length; i++) {
       var hole = values[i]; // each Hole gets unrolled and re-assigned as value
       // so that domdiff will deal with a node/wire, not with a hole
 
-      if (hole instanceof Hole) values[i] = unroll(stack[i] || (stack[i] = createCache()), hole); // arrays are recursively resolved so that each entry will contain
+      if (hole instanceof Hole) values[i] = unroll$1(stack[i] || (stack[i] = createCache$1()), hole); // arrays are recursively resolved so that each entry will contain
       // also a DOM node or a wire, hence it can be diffed if/when needed
-      else if (isArray(hole)) unrollValues(stack[i] || (stack[i] = createCache()), hole, hole.length); // if the value is nothing special, the stack doesn't need to retain data
+      else if (isArray(hole)) unrollValues(stack[i] || (stack[i] = createCache$1()), hole, hole.length); // if the value is nothing special, the stack doesn't need to retain data
         // this is useful also to cleanup previously retained data, if the value
         // was a Hole, or an Array, but not anymore, i.e.:
         // const update = content => html`<div>${content}</div>`;
@@ -1236,7 +1240,7 @@ self.uland = (function (exports) {
     this.values = values;
   }
 
-  var create = Object.create,
+  var create$1 = Object.create,
       defineProperties = Object.defineProperties; // both `html` and `svg` template literal tags are polluted
   // with a `for(ref[, id])` and a `node` tag too
 
@@ -1251,7 +1255,7 @@ self.uland = (function (exports) {
           values[_key - 1] = arguments[_key];
         }
 
-        return unroll(cache, {
+        return unroll$1(cache, {
           type: type,
           template: template,
           values: values
@@ -1274,8 +1278,8 @@ self.uland = (function (exports) {
         // related node, handy with JSON results and mutable list of objects
         // that usually carry a unique identifier
         value: function value(ref, id) {
-          var memo = keyed.get(ref) || keyed.set(ref, create(null));
-          return memo[id] || (memo[id] = fixed(createCache()));
+          var memo = keyed.get(ref) || keyed.set(ref, create$1(null));
+          return memo[id] || (memo[id] = fixed(createCache$1()));
         }
       },
       node: {
@@ -1287,7 +1291,7 @@ self.uland = (function (exports) {
             values[_key3 - 1] = arguments[_key3];
           }
 
-          return unroll(createCache(), {
+          return unroll$1(createCache$1(), {
             type: type,
             template: template,
             values: values
@@ -1304,10 +1308,10 @@ self.uland = (function (exports) {
   // and the new new content is appended, and if such content is a Hole
   // then it's "unrolled" to resolve all its inner nodes.
 
-  var render = function render(where, what) {
+  var render$1 = function render(where, what) {
     var hole = typeof what === 'function' ? what() : what;
-    var info = cache$1.get(where) || cache$1.set(where, createCache());
-    var wire = hole instanceof Hole ? unroll(info, hole) : hole;
+    var info = cache$1.get(where) || cache$1.set(where, createCache$1());
+    var wire = hole instanceof Hole ? unroll$1(info, hole) : hole;
 
     if (wire !== info.wire) {
       info.wire = wire;
@@ -1322,12 +1326,12 @@ self.uland = (function (exports) {
     return where;
   };
 
-  var html = tag('html');
-  var svg = tag('svg');
+  var html$1 = tag('html');
+  var svg$1 = tag('svg');
 
-  var create$1 = Object.create;
+  var create = Object.create;
 
-  var html$1 = function html(template) {
+  var html = function html(template) {
     for (var _len = arguments.length, values = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
       values[_key - 1] = arguments[_key];
     }
@@ -1335,9 +1339,9 @@ self.uland = (function (exports) {
     return new Hole('html', template, values);
   };
 
-  html$1["for"] = createFor(html);
+  html["for"] = createFor(html$1);
 
-  var svg$1 = function svg(template) {
+  var svg = function svg(template) {
     for (var _len2 = arguments.length, values = new Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
       values[_key2 - 1] = arguments[_key2];
     }
@@ -1345,21 +1349,21 @@ self.uland = (function (exports) {
     return new Hole('svg', template, values);
   };
 
-  svg$1["for"] = createFor(svg);
-  var cache$2 = umap(new WeakMap());
+  svg["for"] = createFor(svg$1);
+  var cache = umap(new WeakMap());
 
-  var render$1 = function render$1(where, what) {
-    return (cache$2.get(where) || cache$2.set(where, {
-      c: createCache$1(),
-      h: hooked$2(
+  var render = function render(where, what) {
+    return (cache.get(where) || cache.set(where, {
+      c: createCache(),
+      h: hooked(
       /*async*/
       function (what) {
         var value =
         /*await*/
         typeof what === 'function' ? what() : what;
-        return render(where, value instanceof Hook ?
+        return render$1(where, value instanceof Hook ?
         /*await*/
-        unroll$1(this.c, value) : (
+        unroll(this.c, value) : (
         /*await*/
         unrollHole(this.c, value), value));
       }, where)
@@ -1367,7 +1371,7 @@ self.uland = (function (exports) {
   };
 
   var createHook = function createHook(info, entry) {
-    return hooked$2(
+    return hooked(
     /*async*/
     function () {
       var hole =
@@ -1384,14 +1388,14 @@ self.uland = (function (exports) {
     });
   };
 
-  var createCache$1 = function createCache() {
+  var createCache = function createCache() {
     return {
       s: [],
       e: null
     };
   };
 
-  var unroll$1 = function unroll(info, _ref) {
+  var unroll = function unroll(info, _ref) {
     var f = _ref.f,
         c = _ref.c,
         a = _ref.a;
@@ -1403,7 +1407,7 @@ self.uland = (function (exports) {
         h: null,
         $: null
       };
-      e.h = createHook(createCache$1(), e);
+      e.h = createHook(createCache(), e);
     }
 
     return e.h.apply(c, a);
@@ -1415,10 +1419,10 @@ self.uland = (function (exports) {
     var values = _ref2.values;
 
     /*await*/
-    unrollValues$1(info, values);
+    unrollValues(info, values);
   };
 
-  var unrollValues$1 =
+  var unrollValues =
   /*async*/
   function unrollValues(info, values) {
     var s = info.s,
@@ -1430,11 +1434,11 @@ self.uland = (function (exports) {
       values[i];
       if (hook instanceof Hook) values[i] =
       /*await*/
-      unroll$1(s[i] || (s[i] = createCache$1()), hook);else if (hook instanceof Hole)
+      unroll(s[i] || (s[i] = createCache()), hook);else if (hook instanceof Hole)
         /*await*/
-        unrollHole(s[i] || (s[i] = createCache$1()), hook);else if (isArray(hook))
+        unrollHole(s[i] || (s[i] = createCache()), hook);else if (isArray(hook))
         /*await*/
-        unrollValues(s[i] || (s[i] = createCache$1()), hook);else s[i] = null;
+        unrollValues(s[i] || (s[i] = createCache()), hook);else s[i] = null;
     }
 
     if (length < s.length) s.splice(length);
@@ -1444,7 +1448,7 @@ self.uland = (function (exports) {
     var type = _ref3.type,
         template = _ref3.template,
         values = _ref3.values;
-    return (type === 'svg' ? svg : html)["for"](e, type).apply(void 0, [template].concat(_toConsumableArray(values)));
+    return (type === 'svg' ? svg$1 : html$1)["for"](e, type).apply(void 0, [template].concat(_toConsumableArray(values)));
   };
 
   function Component(f) {
@@ -1462,8 +1466,8 @@ self.uland = (function (exports) {
   function createFor(uhtml) {
     var cache = umap(new WeakMap());
     return function (e, id) {
-      var store = cache.get(e) || cache.set(e, create$1(null));
-      var info = store[id] || (store[id] = createCache$1());
+      var store = cache.get(e) || cache.set(e, create(null));
+      var info = store[id] || (store[id] = createCache());
       return (
         /*async*/
         function (template) {
@@ -1472,7 +1476,7 @@ self.uland = (function (exports) {
           }
 
           /*await*/
-          unrollValues$1(info, values);
+          unrollValues(info, values);
           return uhtml["for"](e, id).apply(void 0, [template].concat(values));
         }
       );
@@ -1481,17 +1485,17 @@ self.uland = (function (exports) {
 
   exports.Component = Component;
   exports.createContext = createContext;
-  exports.html = html$1;
-  exports.render = render$1;
-  exports.svg = svg$1;
+  exports.html = html;
+  exports.render = render;
+  exports.svg = svg;
   exports.useCallback = useCallback;
   exports.useContext = useContext;
   exports.useEffect = useEffect;
   exports.useLayoutEffect = useLayoutEffect;
   exports.useMemo = useMemo;
-  exports.useReducer = useReducer$1;
+  exports.useReducer = useReducer;
   exports.useRef = useRef;
-  exports.useState = useState$1;
+  exports.useState = useState;
 
   return exports;
 
