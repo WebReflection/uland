@@ -2,6 +2,7 @@
   "name": "uland",
   "version": "0.9.0",
   "main": "./cjs/index.js",
+  "types": "index.d.ts",
   "scripts": {
     "build": "npm run async && npm run cjs && npm run rollup:async && npm run rollup:es && npm run rollup:babel && npm run min && npm run size",
     "cjs": "ascjs --no-default esm cjs",
