@@ -12,7 +12,7 @@ self.uland = (function (exports) {
   }
 
   function _iterableToArray(iter) {
-    if (typeof Symbol !== "undefined" && Symbol.iterator in Object(iter)) return Array.from(iter);
+    if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter);
   }
 
   function _unsupportedIterableToArray(o, minLen) {
@@ -126,10 +126,14 @@ self.uland = (function (exports) {
         notifyObserved(addedNodes, 'connected', wmin, wmout);
       }
     });
-    mo.observe(root || document, {
-      subtree: true,
-      childList: true
-    });
+    mo.add = add;
+    mo.add(root || document);
+    var attachShadow = Element.prototype.attachShadow;
+    if (attachShadow) Element.prototype.attachShadow = function (init) {
+      var sd = attachShadow.call(this, init);
+      mo.add(sd);
+      return sd;
+    };
     return {
       has: has,
       connect: connect,
@@ -139,6 +143,13 @@ self.uland = (function (exports) {
       }
     };
   };
+
+  function add(node) {
+    this.observe(node, {
+      subtree: true,
+      childList: true
+    });
+  }
 
   function handleEvent(event) {
     if (event.type in this) this[event.type](event);
@@ -424,7 +435,7 @@ self.uland = (function (exports) {
   };
 
   /*! (c) Andrea Giammarchi - ISC */
-  var observer = null;
+  var observer = observe(document, 'children', CustomEvent$1);
 
   var find = function find(_ref) {
     var firstChild = _ref.firstChild;
@@ -452,7 +463,6 @@ self.uland = (function (exports) {
 
         if (hasEffect(hook)) {
           var element = get(node);
-          if (!observer) observer = observe(element.ownerDocument, 'children', CustomEvent$1);
           if (!observer.has(element)) observer.connect(element, {
             disconnected: function disconnected() {
               dropEffect(hook);
@@ -965,7 +975,7 @@ self.uland = (function (exports) {
           // is not expected one, nothing happens, as easy as that.
 
 
-          if ('ELEMENT_NODE' in newValue && oldValue !== newValue) {
+          if (oldValue !== newValue && 'ELEMENT_NODE' in newValue) {
             oldValue = newValue;
             nodes = diff(comment, nodes, newValue.nodeType === 11 ? slice.call(newValue.childNodes) : [newValue]);
           }
@@ -986,6 +996,7 @@ self.uland = (function (exports) {
   //  * .dataset=${...} for dataset related attributes
   //  * .setter=${...}  for Custom Elements setters or nodes with setters
   //                    such as buttons, details, options, select, etc
+  //  * @event=${...}   to explicitly handle event listeners
   //  * onevent=${...}  to automatically handle event listeners
   //  * generic=${...}  to handle an attribute just like an attribute
 
@@ -999,6 +1010,9 @@ self.uland = (function (exports) {
 
       case '.':
         return setter(node, name.slice(1));
+
+      case '@':
+        return event(node, 'on' + name.slice(1));
 
       case 'o':
         if (name[1] === 'n') return event(node, name);
