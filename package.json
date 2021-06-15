@@ -57,7 +57,7 @@
     "jsx2tag": "^0.2.1",
     "uarray": "^1.0.0",
     "uhooks-dom": "^0.3.0",
-    "uhtml": "^2.7.4",
+    "uhtml": "^2.7.5",
     "umap": "^1.0.2"
   },
   "repository": {
