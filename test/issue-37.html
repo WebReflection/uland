@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>DOM Augmentor</title>
+  <script type="module">
+  import(
+    /^(?:localhost|[::1]|127(?:.d+){3})$/.test(location.hostname) ?
+    '../esm/index.js' :
+    'https://unpkg.com/uland?module'
+  )
+  .then(({Component, render, html, createContext, useContext, useRef, useState, useLayoutEffect}) => {
+    
+    const createStore = (reducer, state = {}) => {
+        const listeners = new Set;
+        return {
+            getState: () => state,
+            subscribe: listener => {
+                listeners.add(listener);
+                const unsubscribe = () => {
+                    console.log('unsubstribing');
+                    listeners.delete(listener);
+                }
+                return unsubscribe;
+            },
+            dispatch: action => {
+                console.log('dispatching');
+                state = reducer(state, action);
+                listeners.forEach(listener => listener());
+            }
+        };
+    };
+
+    // Dumb reducer, just toggle mounted on any action and set/unset nested property if mounted
+    const reducer = ( state = { mounted: false, nested: { prop: 'one' } }, action ) => ( { ...state, mounted: ! state.mounted, nested: state.nested ? state.nested : { prop: 'one' } } );
+
+    // Create Redux Store
+    const Context = createStore( reducer );
+
+    // Get current store values and dispatch hook
+    const useStore = () => {
+
+        const { getState, dispatch, subscribe } = useRef( Context ).current;
+      
+        const [ state, setState ] = useState( getState() );
+          
+        useLayoutEffect( () => {
+            
+            const unsubscribe = subscribe( () => setState( getState() ) );
+            
+            // Unsubscribe on unmount
+            return () => unsubscribe();
+            
+        }, [] );
+      
+        return [ state, dispatch, getState ];
+      
+    }
+
+    // Some other random Component
+    const Nothing = Component( () => {
+      
+        console.log( "rendering nothing" );
+        debugger;
+        const [ { nested: { prop } } ] = useStore(); // This call makes this component render "one last time" after unmount
+      
+        return html`<div>mounted: ${ prop }</div>`;
+
+    } );
+
+    // App Component
+    const App = Component( () => {
+
+        console.log('App');
+        const [ { mounted }, dispatch ] = useStore();
+      
+        return html`
+            <div>
+                <button onClick=${ () => dispatch( { type: 'TOGGLE_MOUNT' } ) }>
+                    ${ mounted ? 'unmount' : 'mount' }
+                </button>
+                ${ mounted ? Nothing() : null }
+            </div>
+        `;
+      
+    } );
+
+    render( document.body, App() );
+  });
+  </script>
+</head>
+<body>
+  <div id="direct"></div>
+  <div id="indirect"></div>
+</body>
+</html>
