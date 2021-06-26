@@ -1344,27 +1344,29 @@ self.uland = (function (exports) {
   var svg$1 = tag('svg');
 
   var create = Object.create;
-
-  var html = function html(template) {
-    for (var _len = arguments.length, values = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-      values[_key - 1] = arguments[_key];
-    }
-
-    return new Hole('html', template, values);
-  };
-
-  html["for"] = createFor(html$1);
-
-  var svg = function svg(template) {
-    for (var _len2 = arguments.length, values = new Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
-      values[_key2 - 1] = arguments[_key2];
-    }
-
-    return new Hole('svg', template, values);
-  };
-
-  svg["for"] = createFor(svg$1);
   var cache = umap(new WeakMap());
+
+  var createTag = function createTag(kind) {
+    var tag =
+    /*async*/
+    function tag(template) {
+      var info = cache.get(template) || cache.set(template, createCache());
+      /*await*/
+
+      for (var _len = arguments.length, values = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+        values[_key - 1] = arguments[_key];
+      }
+
+      unrollValues(info, values);
+      return kind.apply(void 0, [template].concat(values));
+    };
+
+    tag["for"] = createFor(kind);
+    return tag;
+  };
+
+  var html = createTag(html$1);
+  var svg = createTag(svg$1);
 
   var render = function render(where, what) {
     return (cache.get(where) || cache.set(where, {
@@ -1379,26 +1381,19 @@ self.uland = (function (exports) {
         /*await*/
         unroll(this.c, value) : (
         /*await*/
-        unrollHole(this.c, value), value));
+        unrollValues(this.c, value.values), value));
       }, where)
     })).h(what);
   };
 
-  var createHook = function createHook(info, entry) {
+  var createHook = function createHook(entry) {
     return hooked(
     /*async*/
     function () {
       var hole =
       /*await*/
       entry.f.apply(this, arguments);
-
-      if (hole instanceof Hole) {
-        /*await*/
-        unrollHole(info, hole);
-        entry.$ = view(entry, hole);
-      } else entry.$ = hole;
-
-      return entry.$;
+      return entry.$ = hole instanceof Hole ? view(entry, hole) : hole;
     });
   };
 
@@ -1421,19 +1416,10 @@ self.uland = (function (exports) {
         h: null,
         $: null
       };
-      e.h = createHook(createCache(), e);
+      e.h = createHook(e);
     }
 
     return e.h.apply(c, a);
-  };
-
-  var unrollHole =
-  /*async*/
-  function unrollHole(info, _ref2) {
-    var values = _ref2.values;
-
-    /*await*/
-    unrollValues(info, values);
   };
 
   var unrollValues =
@@ -1448,9 +1434,7 @@ self.uland = (function (exports) {
       values[i];
       if (hook instanceof Hook) values[i] =
       /*await*/
-      unroll(s[i] || (s[i] = createCache()), hook);else if (hook instanceof Hole)
-        /*await*/
-        unrollHole(s[i] || (s[i] = createCache()), hook);else if (isArray(hook))
+      unroll(s[i] || (s[i] = createCache()), hook);else if (isArray(hook))
         /*await*/
         unrollValues(s[i] || (s[i] = createCache()), hook);else s[i] = null;
     }
@@ -1458,10 +1442,10 @@ self.uland = (function (exports) {
     if (length < s.length) s.splice(length);
   };
 
-  var view = function view(e, _ref3) {
-    var type = _ref3.type,
-        template = _ref3.template,
-        values = _ref3.values;
+  var view = function view(e, _ref2) {
+    var type = _ref2.type,
+        template = _ref2.template,
+        values = _ref2.values;
     return (type === 'svg' ? svg$1 : html$1)["for"](e, type).apply(void 0, [template].concat(_toConsumableArray(values)));
   };
 
@@ -1485,8 +1469,8 @@ self.uland = (function (exports) {
       return (
         /*async*/
         function (template) {
-          for (var _len3 = arguments.length, values = new Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {
-            values[_key3 - 1] = arguments[_key3];
+          for (var _len2 = arguments.length, values = new Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
+            values[_key2 - 1] = arguments[_key2];
           }
 
           /*await*/

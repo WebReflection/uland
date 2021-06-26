@@ -12,13 +12,20 @@ const {
 
 const {create} = Object;
 
-const html = (template, ...values) => new Hole('html', template, values);
-html.for = createFor($html);
-
-const svg = (template, ...values) => new Hole('svg', template, values);
-svg.for = createFor($svg);
-
 const cache = umap(new WeakMap);
+
+const createTag = kind => {
+  const tag = async (template, ...values) => {
+    const info = cache.get(template) || cache.set(template, createCache());
+    await unrollValues(info, values);
+    return kind(template, ...values);
+  };
+  tag.for = createFor(kind);
+  return tag;
+};
+
+const html = createTag($html);
+const svg = createTag($svg);
 
 const render = (where, what) => (
   cache.get(where) || cache.set(where, {
@@ -30,7 +37,7 @@ const render = (where, what) => (
           where,
           value instanceof Hook ?
             await unroll(this.c, value) :
-            (await unrollHole(this.c, value), value)
+            (await unrollValues(this.c, value.values), value)
         );
       },
       where
@@ -55,15 +62,9 @@ exports.svg = svg;
   exports.useRef = m.useRef;
 })(require('uhooks-dom/async'));
 
-const createHook = (info, entry) => hooked(async function () {
+const createHook = entry => hooked(async function () {
   const hole = await entry.f.apply(this, arguments);
-  if (hole instanceof Hole) {
-    await unrollHole(info, hole);
-    entry.$ = view(entry, hole);
-  }
-  else
-    entry.$ = hole;
-  return entry.$;
+  return (entry.$ = hole instanceof Hole ? view(entry, hole) : hole);
 });
 
 const createCache = () => ({s: [], e: null});
@@ -72,13 +73,9 @@ const unroll = (info, {f, c, a}) => {
   let {e} = info;
   if (!e || e.f !== f) {
     info.e = (e = {f, h: null, $: null});
-    e.h = createHook(createCache(), e);
+    e.h = createHook(e);
   }
   return e.h.apply(c, a);
-};
-
-const unrollHole = async (info, {values}) => {
-  await unrollValues(info, values);
 };
 
 const unrollValues = async (info, values) => {
@@ -87,8 +84,6 @@ const unrollValues = async (info, values) => {
     const hook = await values[i];
     if (hook instanceof Hook)
       values[i] = await unroll(s[i] || (s[i] = createCache()), hook);
-    else if (hook instanceof Hole)
-      await unrollHole(s[i] || (s[i] = createCache()), hook);
     else if (isArray(hook))
       await unrollValues(s[i] || (s[i] = createCache()), hook);
     else

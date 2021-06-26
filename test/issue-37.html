@@ -63,7 +63,6 @@
     const Nothing = Component( () => {
       
         console.log( "rendering nothing" );
-        debugger;
         const [ { nested: { prop } } ] = useStore(); // This call makes this component render "one last time" after unmount
       
         return html`<div>mounted: ${ prop }</div>`;
