@@ -1,6 +1,6 @@
 {
   "name": "uland",
-  "version": "0.10.2",
+  "version": "0.11.0",
   "main": "./cjs/index.js",
   "types": "index.d.ts",
   "scripts": {
