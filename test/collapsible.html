@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <span>Loading...</span>
+  <script type="module">
+    import {
+      render,
+      html,
+      Component,
+      useState
+    } from "../esm/index.js";
+    import { css } from "https://cdn.skypack.dev/styled-elements";
+
+    const Collapsible = Component(({ title, children }) => {
+      const [isCollapsed, setIsCollapsed] = useState(false);
+      return html`
+        <div>
+          <button
+            onclick=${() => {
+              setIsCollapsed(!isCollapsed);
+            }}
+          >
+            ${isCollapsed ? "+" : "-"}
+          </button>
+          <h2>${title}</h2>
+          ${isCollapsed ? html`` : children}
+        </div>
+      `;
+    });
+
+    const createArr = () => Array.from(Array(4), () => Math.random() * 10);
+
+    const arr = ["One", "Two", "Three", "Four"];
+
+    render(
+      document.body,
+      html`
+        <div
+          class=${css`
+            display: flex;
+            flex-direction: row;
+          `}
+        >
+          ${arr.map((title) =>
+            Collapsible({
+              title,
+              children: html.for(document.body, title)`
+                <div>
+                  Contents!!!!!!
+                  ${createArr().map((title) =>
+                    Collapsible({ title, children: html`Inner Contents` })
+                  )}
+                </div>
+              `
+            })
+          )}
+        </div>
+      `
+    );
+  </script>
+</body>
+</html>
