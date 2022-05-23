@@ -1,8 +1,6 @@
 self.uland = (function (exports) {
   'use strict';
 
-  var CustomEvent$1 = CustomEvent;
-
   /**
    * @typedef {Object} Handler an object that handle events.
    * @property {(event: Event) => void} connected an optional method triggered when node is connected.
@@ -96,8 +94,6 @@ self.uland = (function (exports) {
       this[event.type](event);
   }
 
-  var Lie = Promise;
-
   let info = null, schedule = new Set;
 
   const invoke = effect => {
@@ -175,7 +171,7 @@ self.uland = (function (exports) {
     }
   };
 
-  const wait = new Lie($ => $());
+  const wait = Promise.resolve();
 
   const createContext = value => ({
     _: new Set,
@@ -223,6 +219,7 @@ self.uland = (function (exports) {
       stack.push(s[i]);
     s[i].$ = callback;
     s[i]._ = guards;
+    s[i].d = false;
   };
 
   const useEffect = createEffect(effects);
@@ -311,7 +308,7 @@ self.uland = (function (exports) {
   const useState = value => wrap(h, c, a, useState$1(value));
 
   /*! (c) Andrea Giammarchi - ISC */
-  const observer = observe(document, 'children', CustomEvent$1);
+  const observer = observe(document, 'children', CustomEvent);
 
   const find = ({firstChild}) => {
     if (

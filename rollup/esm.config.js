@@ -10,10 +10,7 @@ export default {
   context: 'null',
   moduleContext: 'null',
   output: {
-    esModule: false,
-    exports: 'named',
-    file: './es.js',
-    format: 'iife',
-    name: 'uland'
+    file: './esm.js',
+    format: 'module'
   }
 };

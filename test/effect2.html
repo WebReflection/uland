@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script type="module">
+import { Component, useState, useEffect, render, html } from '../esm/index.js';
+
+
+let B = Component(() => {
+  return html`<div>B Component</div>`;
+});
+
+let A = Component(() => {
+  useEffect(() => {
+    console.log("effect");
+    return () => console.log("clean effect");
+  }, []);
+  return html`<div>A Component</div>`;
+});
+
+
+const App = Component(() => {
+  const [showA, setShowA] = useState(true);
+  const [showB, setShowB] = useState(true);
+  return html`
+    <div>
+      <button onClick=${() => setShowA(!showA)}>ShowA</button>
+      <button onClick=${() => setShowB(!showB)}>ShowB</button>
+      ${showA ? A() : html`<div></div>`}
+      ${showB ? B() : html`<div></div>`}
+    </div>
+  `;
+});
+
+render( document.body, html`<div>${App()}</div>`);
+  </script>
+</head>
+</html>
